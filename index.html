@@ -53,25 +53,25 @@
     .app-header {
       background: var(--accent);
       color: #fff;
-      padding: 1rem;
+      padding: 0.8rem 1rem;
       text-align: center;
-      font-size: 1.3rem;
-      font-weight: bold;
+      font-size: 1.1rem;
+      font-weight: 600;
     }
 
     main {
-      padding: 1rem;
+      padding: 0.8rem;
       max-width: 1100px;
       margin: 0 auto;
     }
 
     button {
       cursor: pointer;
-      padding: 0.45rem 0.9rem;
+      padding: 0.35rem 0.7rem;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--bg-elevated);
-      font-size: 0.95rem;
+      font-size: 0.85rem;
     }
 
     button.primary {
@@ -81,7 +81,7 @@
     }
 
     button.icon-btn {
-      padding: 0.2rem 0.35rem;
+      padding: 0.15rem 0.3rem;
       border-radius: 999px;
       min-width: 0;
       display: inline-flex;
@@ -95,8 +95,8 @@
     }
 
     .icon-btn svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       display: block;
     }
 
@@ -104,15 +104,16 @@
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
-      margin-bottom: 1rem;
+      margin-bottom: 0.6rem;
     }
 
     input, select, textarea {
-      padding: 0.4rem;
+      padding: 0.35rem;
       border-radius: var(--radius);
       border: 1px solid var(--border);
       background: var(--bg-elevated);
       color: var(--text);
+      font-size: 0.85rem;
     }
 
     input[type="search"] {
@@ -124,7 +125,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow-soft);
       overflow: auto;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
     }
 
     table {
@@ -134,31 +135,32 @@
     }
 
     th, td {
-      padding: 0.25rem 0.35rem;
+      padding: 0.12rem 0.25rem;
       border-bottom: 1px solid var(--border);
-      font-size: 0.65rem; /* 1/3 kleiner */
+      font-size: 0.45rem; /* deutlich kleiner */
+      line-height: 1.1;
     }
 
     th {
-      background: rgba(0,0,0,0.05);
+      background: rgba(0,0,0,0.04);
       text-align: left;
     }
 
     .badge-low {
-      background: rgba(255, 193, 7, 0.12);
+      background: rgba(255, 193, 7, 0.15);
       color: #f2b632;
-      padding: 0.05rem 0.35rem;
+      padding: 0.05rem 0.25rem;
       border-radius: 999px;
-      font-size: 0.65rem;
-      margin-left: 0.15rem;
+      font-size: 0.4rem;
+      margin-left: 0.1rem;
     }
 
     .text-muted {
       color: var(--text-muted);
-      font-size: 0.7rem;
+      font-size: 0.4rem;
     }
 
-    /* mobile optimieren */
+    /* Mobile: Tabelle kompakter machen */
     @media (max-width: 800px) {
       .controls,
       .filters {
@@ -179,7 +181,7 @@
     }
 
     dialog {
-      padding: 1rem;
+      padding: 0.9rem;
       border: none;
       border-radius: var(--radius);
       background: var(--bg-elevated);
@@ -196,14 +198,14 @@
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 0.7rem;
+      gap: 0.6rem;
     }
 
     .form-grid label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .full-width {
@@ -214,7 +216,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 0.5rem;
-      margin-top: 1rem;
+      margin-top: 0.8rem;
     }
 
     .dialog-photo-content img {
@@ -223,22 +225,22 @@
       border-radius: var(--radius);
       border: 1px solid var(--border);
       display: block;
-      margin-bottom: 0.7rem;
+      margin-bottom: 0.6rem;
     }
 
     .dialog-note-content pre {
       white-space: pre-wrap;
       font-family: inherit;
       background: rgba(0,0,0,0.04);
-      padding: 0.6rem;
+      padding: 0.5rem;
       border-radius: var(--radius);
       max-height: 60vh;
       overflow: auto;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
     }
 
     .hint {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
     }
   </style>
@@ -252,7 +254,7 @@
   <main>
 
     <!-- STATISTIK -->
-    <div id="stats" style="font-weight:600; margin-bottom:0.8rem;">
+    <div id="stats" style="font-weight:600; margin-bottom:0.5rem; font-size:0.8rem;">
       Artikel: 0 · Gesamtmenge: 0 · Ausgaben: 0 €
     </div>
 
@@ -261,7 +263,7 @@
       <button class="primary" id="btn-add-item">+ Artikel</button>
       <button id="btn-export">Export (JSON)</button>
 
-      <label style="padding:0.45rem 0.9rem; border:1px solid var(--border); border-radius:999px; cursor:pointer;">
+      <label style="padding:0.35rem 0.7rem; border:1px solid var(--border); border-radius:999px; cursor:pointer;">
         Import
         <input type="file" id="input-import" hidden accept="application/json">
       </label>
@@ -303,7 +305,7 @@
     <!-- Artikel-Dialog -->
     <dialog id="item-dialog">
       <form id="item-form" class="form-grid" onsubmit="return false;">
-        <h3 style="grid-column:1/-1;margin:0 0 .5rem 0;">Artikel</h3>
+        <h3 style="grid-column:1/-1;margin:0 0 .4rem 0;font-size:0.95rem;">Artikel</h3>
 
         <label>
           Artikelname
@@ -378,7 +380,7 @@
       <div class="dialog-photo-content">
         <img id="photo-dialog-img" alt="Artikel-Foto">
         <menu class="dialog-menu">
-          <button class="primary" type="button" onclick="downloadPhoto()">Bild speichern</button>
+          <button class="primary" type="button" onclick="openPhotoInNewTab()">Bild öffnen (Speichern auf iPhone)</button>
           <button class="primary" type="button" onclick="document.getElementById('photo-dialog').close()">Schließen</button>
         </menu>
       </div>
@@ -387,7 +389,7 @@
     <!-- Notiz-Dialog -->
     <dialog id="note-dialog">
       <div class="dialog-note-content">
-        <h3>Notiz</h3>
+        <h3 style="margin-top:0;font-size:0.95rem;">Notiz</h3>
         <pre id="note-dialog-text"></pre>
         <menu class="dialog-menu">
           <button class="primary" type="button" onclick="document.getElementById('note-dialog').close()">Schließen</button>
@@ -419,7 +421,7 @@
 
     // ---------- Storage & Daten ----------
 
-    const STORAGE_KEY = "lager-app-data-v4";
+    const STORAGE_KEY = "lager-app-data-v5";
 
     function loadData() {
       try {
@@ -519,7 +521,7 @@
           <td>
             <input type="number" min="0"
               value="${Number(item.quantity || 0)}"
-              style="width:55px;font-size:0.65rem;"
+              style="width:55px;font-size:0.45rem;padding:0.05rem 0.1rem;"
               data-id="${item.id}"
               class="qty-input">
             ${low ? '<span class="badge-low">niedrig</span>' : ""}
@@ -529,7 +531,7 @@
           <td>${item.photoDataUrl ? '<span class="text-muted">Foto</span>' : '<span class="text-muted">–</span>'}</td>
           <td>${item.note ? escapeHtml(shorten(item.note, 25)) : '<span class="text-muted">–</span>'}</td>
           <td>
-            <div style="display:flex;gap:.15rem;flex-wrap:wrap;">
+            <div style="display:flex;gap:.1rem;flex-wrap:wrap;">
               <button class="icon-btn" title="Artikel markieren" data-action="toggle-flag" data-id="${item.id}">${ICON_STAR}</button>
               <button class="icon-btn" title="Artikel bearbeiten" data-action="edit" data-id="${item.id}">${ICON_EDIT}</button>
               <button class="icon-btn" title="Foto anzeigen" data-action="show-photo" data-id="${item.id}" ${item.photoDataUrl ? "" : "disabled"}>${ICON_PHOTO}</button>
@@ -710,14 +712,10 @@
       return true;
     }
 
-    // Foto speichern aus Popup
-    function downloadPhoto() {
-      const img = photoDialogImg;
-      if (!img.src) return;
-      const a = document.createElement("a");
-      a.href = img.src;
-      a.download = "artikel-foto.png";
-      a.click();
+    // Foto öffnen – iPhone-kompatibel (im neuen Tab -> „Bild sichern“)
+    function openPhotoInNewTab() {
+      if (!photoDialogImg.src) return;
+      window.open(photoDialogImg.src, "_blank");
     }
 
     // Filter & Import/Export
@@ -774,9 +772,9 @@
     // Init
     render();
 
-    // Service Worker registrieren (deine Datei heißt sW.JS)
+    // Service Worker registrieren (deine Datei heißt sw.js)
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sW.JS").catch(console.error);
+      navigator.serviceWorker.register("./sw.js").catch(console.error);
     }
   </script>
 </body>
