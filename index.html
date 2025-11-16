@@ -14,6 +14,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
+  <!-- XLSX (Numbers Export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- jsPDF für PDF Inventur -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     :root {
       --bg: #f4f5f7;
@@ -23,23 +29,19 @@
       --accent-soft: #e1f4e7;
       --text: #222;
       --text-muted: #666;
-      --danger: #c0392b;
       --radius: 8px;
       --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
-    /* Darkmode */
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #15171b;
-        --bg-elevated: #1f2228;
+        --bg-elevated: #1f242a;
         --border: #343843;
         --accent: #4caf50;
         --accent-soft: #21452a;
         --text: #f5f5f5;
         --text-muted: #aaaaaa;
-        --danger: #e57373;
-        --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.6);
       }
     }
 
@@ -53,25 +55,25 @@
     .app-header {
       background: var(--accent);
       color: #fff;
-      padding: 0.8rem 1rem;
+      padding: 1rem;
       text-align: center;
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
 
     main {
-      padding: 0.8rem;
+      padding: 1rem;
       max-width: 1100px;
       margin: 0 auto;
     }
 
     button {
       cursor: pointer;
-      padding: 0.35rem 0.7rem;
+      padding: 0.45rem 0.9rem;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--bg-elevated);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
     }
 
     button.primary {
@@ -80,44 +82,25 @@
       color: white;
     }
 
-    button.icon-btn {
-      padding: 0.15rem 0.3rem;
-      border-radius: 999px;
-      min-width: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
     }
 
-    button.icon-btn[disabled] {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    .icon-btn svg {
-      width: 12px;
-      height: 12px;
-      display: block;
-    }
-
-    .controls, .filters {
+    .filters {
       display: flex;
       gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 0.6rem;
+      margin-bottom: 1rem;
     }
 
     input, select, textarea {
-      padding: 0.35rem;
+      padding: 0.4rem;
       border-radius: var(--radius);
       border: 1px solid var(--border);
       background: var(--bg-elevated);
       color: var(--text);
-      font-size: 0.85rem;
-    }
-
-    input[type="search"] {
-      flex: 1;
     }
 
     .table-wrapper {
@@ -125,7 +108,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow-soft);
       overflow: auto;
-      margin-top: 0.4rem;
+      margin-top: 0.5rem;
     }
 
     table {
@@ -135,43 +118,24 @@
     }
 
     th, td {
-      padding: 0.12rem 0.25rem;
+      padding: 0.15rem 0.25rem;
       border-bottom: 1px solid var(--border);
-      font-size: 0.45rem; /* deutlich kleiner */
-      line-height: 1.1;
+      font-size: 0.5rem; /* Sehr klein */
     }
 
     th {
-      background: rgba(0,0,0,0.04);
-      text-align: left;
+      background: rgba(0,0,0,0.05);
     }
 
-    .badge-low {
-      background: rgba(255, 193, 7, 0.15);
-      color: #f2b632;
-      padding: 0.05rem 0.25rem;
-      border-radius: 999px;
-      font-size: 0.4rem;
-      margin-left: 0.1rem;
+    /* MENGENFELD – extra schmal */
+    .qty-input {
+      width: 38px !important;
+      padding: 0.05rem !important;
+      font-size: 0.5rem !important;
+      text-align: center;
     }
 
-    .text-muted {
-      color: var(--text-muted);
-      font-size: 0.4rem;
-    }
-
-    /* Mobile: Tabelle kompakter machen */
     @media (max-width: 800px) {
-      .controls,
-      .filters {
-        flex-direction: column;
-      }
-
-      table {
-        min-width: 0;
-      }
-
-      /* Größe, Shop, Foto, Notiz ausblenden */
       th:nth-child(5), td:nth-child(5),
       th:nth-child(6), td:nth-child(6),
       th:nth-child(10), td:nth-child(10),
@@ -181,7 +145,7 @@
     }
 
     dialog {
-      padding: 0.9rem;
+      padding: 1rem;
       border: none;
       border-radius: var(--radius);
       background: var(--bg-elevated);
@@ -192,86 +156,59 @@
     }
 
     dialog::backdrop {
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.45);
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 0.6rem;
-    }
-
-    .form-grid label {
-      font-size: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.7rem;
     }
 
     .dialog-menu {
       display: flex;
       justify-content: flex-end;
       gap: 0.5rem;
-      margin-top: 0.8rem;
+      margin-top: 1rem;
     }
 
     .dialog-photo-content img {
       max-width: 90vw;
       max-height: 70vh;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
       display: block;
-      margin-bottom: 0.6rem;
-    }
-
-    .dialog-note-content pre {
-      white-space: pre-wrap;
-      font-family: inherit;
-      background: rgba(0,0,0,0.04);
-      padding: 0.5rem;
+      margin: auto;
       border-radius: var(--radius);
-      max-height: 60vh;
-      overflow: auto;
-      font-size: 0.75rem;
-    }
-
-    .hint {
-      font-size: 0.7rem;
-      color: var(--text-muted);
     }
   </style>
 </head>
 
 <body>
-  <header class="app-header">
-    Lager App
-  </header>
+  <header class="app-header">Lager App</header>
 
   <main>
 
-    <!-- STATISTIK -->
-    <div id="stats" style="font-weight:600; margin-bottom:0.5rem; font-size:0.8rem;">
+    <!-- Statistik -->
+    <div id="stats" style="font-weight:600; margin-bottom:0.8rem;">
       Artikel: 0 · Gesamtmenge: 0 · Ausgaben: 0 €
     </div>
 
-    <!-- BUTTONS -->
+    <!-- Buttons -->
     <section class="controls">
       <button class="primary" id="btn-add-item">+ Artikel</button>
-      <button id="btn-export">Export (JSON)</button>
 
-      <label style="padding:0.35rem 0.7rem; border:1px solid var(--border); border-radius:999px; cursor:pointer;">
+      <label style="padding:0.45rem;border:1px solid var(--border);border-radius:999px;">
         Import
         <input type="file" id="input-import" hidden accept="application/json">
       </label>
+
+      <button id="btn-export-json">Export JSON</button>
+      <button id="btn-inventur-xlsx">Inventur (Numbers)</button>
+      <button id="btn-inventur-pdf">Inventur (PDF)</button>
     </section>
 
-    <!-- FILTER -->
+    <!-- Filter -->
     <section class="filters">
-      <input id="search" type="search" placeholder="Suche nach Name, Nummer, Zustand, Notiz …">
+      <input id="search" type="search" placeholder="Suche…">
       <select id="filter-flag">
         <option value="all">Alle</option>
         <option value="flagged">Markiert</option>
@@ -279,7 +216,7 @@
       </select>
     </section>
 
-    <!-- TABELLE -->
+    <!-- Tabelle -->
     <div class="table-wrapper">
       <table>
         <thead>
@@ -302,55 +239,32 @@
       </table>
     </div>
 
-    <!-- Artikel-Dialog -->
+    <!-- Dialog Artikel -->
     <dialog id="item-dialog">
       <form id="item-form" class="form-grid" onsubmit="return false;">
-        <h3 style="grid-column:1/-1;margin:0 0 .4rem 0;font-size:0.95rem;">Artikel</h3>
 
-        <label>
-          Artikelname
-          <input id="item-name" required>
-        </label>
+        <label>Artikelname <input id="item-name" required></label>
+        <label>Artikelnummer <input id="item-number"></label>
 
-        <label>
-          Artikelnummer
-          <input id="item-number">
-        </label>
-
-        <label>
-          Zustand
+        <label>Zustand
           <select id="item-condition">
-            <option value="">– bitte wählen –</option>
+            <option value="">–</option>
             <option value="Neu">Neu</option>
             <option value="Wie neu">Wie neu</option>
             <option value="Gebraucht">Gebraucht</option>
           </select>
         </label>
 
-        <label>
-          Größe
-          <input id="item-size">
-        </label>
+        <label>Größe <input id="item-size"></label>
+        <label>Wo gekauft <input id="item-store"></label>
 
-        <label>
-          Wo gekauft
-          <input id="item-store">
-        </label>
+        <label>Menge <input id="item-quantity" type="number" min="0" value="0"></label>
 
-        <label>
-          Menge
-          <input id="item-quantity" type="number" min="0" value="0">
-        </label>
-
-        <label>
-          Einkaufspreis pro Stück (€)
+        <label>Preis pro Stück (€)
           <input id="item-unit-price" type="number" min="0" step="0.01" value="0">
         </label>
 
-        <label>
-          Kaufdatum
-          <input id="item-date" type="date">
-        </label>
+        <label>Kaufdatum <input id="item-date" type="date"></label>
 
         <label class="full-width">
           Notiz
@@ -360,422 +274,550 @@
         <label>
           Foto
           <input id="item-photo" type="file" accept="image/*">
-          <small id="item-photo-info" class="hint">Kein Foto ausgewählt</small>
+          <small id="item-photo-info">Kein Foto ausgewählt</small>
         </label>
 
-        <label style="display:flex;align-items:center;gap:0.4rem;">
+        <label style="display:flex;align-items:center;gap:0.3rem;">
           <input id="item-flagged" type="checkbox">
-          Artikel markieren
+          Markiert
         </label>
 
         <menu class="dialog-menu">
-          <button type="button" onclick="onItemCancel()">Abbrechen</button>
-          <button type="button" class="primary" onclick="onItemSave()">Speichern</button>
+          <button type="button" onclick="cancelItem()">Abbrechen</button>
+          <button class="primary" type="button" onclick="saveItem()">Speichern</button>
         </menu>
       </form>
     </dialog>
 
-    <!-- Foto-Dialog -->
+    <!-- Foto Dialog -->
     <dialog id="photo-dialog">
       <div class="dialog-photo-content">
-        <img id="photo-dialog-img" alt="Artikel-Foto">
+        <img id="photo-dialog-img">
         <menu class="dialog-menu">
-          <button class="primary" type="button" onclick="openPhotoInNewTab()">Bild öffnen (Speichern auf iPhone)</button>
-          <button class="primary" type="button" onclick="document.getElementById('photo-dialog').close()">Schließen</button>
+          <button onclick="openPhotoNewTab()" class="primary">Bild öffnen (iPhone Speichern)</button>
+          <button onclick="photoDialog.close()" class="primary">Schließen</button>
         </menu>
       </div>
     </dialog>
 
-    <!-- Notiz-Dialog -->
+    <!-- Notiz Dialog -->
     <dialog id="note-dialog">
-      <div class="dialog-note-content">
-        <h3 style="margin-top:0;font-size:0.95rem;">Notiz</h3>
-        <pre id="note-dialog-text"></pre>
-        <menu class="dialog-menu">
-          <button class="primary" type="button" onclick="document.getElementById('note-dialog').close()">Schließen</button>
-        </menu>
-      </div>
+      <h3>Notiz</h3>
+      <pre id="note-dialog-text" style="white-space:pre-wrap;"></pre>
+      <menu class="dialog-menu">
+        <button onclick="noteDialog.close()" class="primary">Schließen</button>
+      </menu>
     </dialog>
+        <script>
+      const STORAGE_KEY = "lager-app-data-v6";
 
-  </main>
+      let items = loadData() || [];
+      let currentId = null;
+      let tempPhotoDataUrl = null;
 
-  <script>
-    // ---------- SVG-Icons ----------
+      const tbody = document.getElementById("inventory-body");
+      const itemDialog = document.getElementById("item-dialog");
+      window.photoDialog = document.getElementById("photo-dialog");
+      window.noteDialog = document.getElementById("note-dialog");
+      const photoDialogImg = document.getElementById("photo-dialog-img");
+      const noteDialogText = document.getElementById("note-dialog-text");
 
-    const ICON_STAR = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 2.5l2.9 6 6.6.8-4.8 4.3 1.4 6.5L12 16.8 5.9 20.1l1.4-6.5-4.8-4.3 6.6-.8z" fill="currentColor"/>
-      </svg>`;
-    const ICON_EDIT = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 17.25V20h2.75L17.8 8.94l-2.75-2.75L4 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.13 1.13 3.75 3.75 1.13-1.13z" fill="currentColor"/>
-      </svg>`;
-    const ICON_PHOTO = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 5h4l1-1h6l1 1h4v14H4V5zm2 4a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm12 8-4.5-6-3.5 4.5-2.5-3L6 17h12z" fill="currentColor"/>
-      </svg>`;
-    const ICON_NOTE = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M6 4h12v10l-4 4H6V4zm8 11h3.5L14 18.5V15zM8 7h8v2H8V7zm0 4h8v2H8v-2z" fill="currentColor"/>
-      </svg>`;
+      // Buttons
+      document.getElementById("btn-add-item").onclick = () => openItemDialog(null);
+      document.getElementById("btn-export-json").onclick = () => exportJson(items);
+      document.getElementById("btn-inventur-xlsx").onclick = () => exportInventurXLSX(items);
+      document.getElementById("btn-inventur-pdf").onclick = () => exportInventurPDF(items);
 
-    // ---------- Storage & Daten ----------
-
-    const STORAGE_KEY = "lager-app-data-v5";
-
-    function loadData() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch {
-        return [];
-      }
-    }
-
-    function saveData(list) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    }
-
-    function exportJson(list) {
-      const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "lager-backup.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importJson(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => {
-          try {
-            resolve(JSON.parse(r.result));
-          } catch (e) {
-            reject(e);
+      document.getElementById("input-import").onchange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const data = await importJson(file);
+          if (Array.isArray(data)) {
+            items = data;
+            saveData(items);
+            render();
+          } else {
+            alert("Ungültiges JSON-Format.");
           }
-        };
-        r.onerror = reject;
-        r.readAsText(file);
-      });
-    }
-
-    // ---------- App-State ----------
-
-    let items = loadData() || [];
-    let currentId = null;
-    let tempPhotoDataUrl = null;
-
-    const body = document.getElementById("inventory-body");
-    const dialog = document.getElementById("item-dialog");
-    const photoDialog = document.getElementById("photo-dialog");
-    const noteDialog = document.getElementById("note-dialog");
-    const photoDialogImg = document.getElementById("photo-dialog-img");
-    const noteDialogText = document.getElementById("note-dialog-text");
-
-    // ---------- Rendering ----------
-
-    function render() {
-      body.innerHTML = "";
-
-      const search = document.getElementById("search").value.toLowerCase();
-      const filter = document.getElementById("filter-flag").value;
-
-      const filtered = items.filter((i) => {
-        if (search) {
-          const hay = (
-            (i.name || "") + " " +
-            (i.articleNumber || "") + " " +
-            (i.condition || "") + " " +
-            (i.size || "") + " " +
-            (i.store || "") + " " +
-            (i.note || "")
-          ).toLowerCase();
-          if (!hay.includes(search)) return false;
+        } catch (err) {
+          console.error(err);
+          alert("Fehler beim Import.");
+        } finally {
+          e.target.value = "";
         }
-        if (filter === "flagged" && !i.flagged) return false;
-        if (filter === "low" && Number(i.quantity || 0) > 1) return false;
-        return true;
-      });
-
-      if (!filtered.length) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = '<td colspan="12" style="text-align:center;">Keine Artikel</td>';
-        body.appendChild(tr);
-        updateStats();
-        return;
-      }
-
-      for (const item of filtered) {
-        const tr = document.createElement("tr");
-        const low = Number(item.quantity || 0) <= 1;
-
-        tr.innerHTML = `
-          <td>${item.flagged ? "⭐" : ""}</td>
-          <td>${escapeHtml(item.name || "")}</td>
-          <td>${escapeHtml(item.articleNumber || "")}</td>
-          <td>${escapeHtml(item.condition || "")}</td>
-          <td>${escapeHtml(item.size || "")}</td>
-          <td>${escapeHtml(item.store || "")}</td>
-          <td>
-            <input type="number" min="0"
-              value="${Number(item.quantity || 0)}"
-              style="width:55px;font-size:0.45rem;padding:0.05rem 0.1rem;"
-              data-id="${item.id}"
-              class="qty-input">
-            ${low ? '<span class="badge-low">niedrig</span>' : ""}
-          </td>
-          <td>${formatPrice(item.unitPrice)}</td>
-          <td>${escapeHtml(item.purchaseDate || "")}</td>
-          <td>${item.photoDataUrl ? '<span class="text-muted">Foto</span>' : '<span class="text-muted">–</span>'}</td>
-          <td>${item.note ? escapeHtml(shorten(item.note, 25)) : '<span class="text-muted">–</span>'}</td>
-          <td>
-            <div style="display:flex;gap:.1rem;flex-wrap:wrap;">
-              <button class="icon-btn" title="Artikel markieren" data-action="toggle-flag" data-id="${item.id}">${ICON_STAR}</button>
-              <button class="icon-btn" title="Artikel bearbeiten" data-action="edit" data-id="${item.id}">${ICON_EDIT}</button>
-              <button class="icon-btn" title="Foto anzeigen" data-action="show-photo" data-id="${item.id}" ${item.photoDataUrl ? "" : "disabled"}>${ICON_PHOTO}</button>
-              <button class="icon-btn" title="Notiz anzeigen" data-action="show-note" data-id="${item.id}" ${item.note ? "" : "disabled"}>${ICON_NOTE}</button>
-            </div>
-          </td>
-        `;
-        body.appendChild(tr);
-      }
-
-      updateStats();
-    }
-
-    // ---------- Statistik ----------
-
-    function updateStats() {
-      const itemCount = items.length;
-      const totalQty = items.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
-      const totalCost = items.reduce((sum, i) => {
-        const qty = Number(i.quantity || 0);
-        const price = Number(i.unitPrice || 0);
-        return sum + qty * price;
-      }, 0);
-      document.getElementById("stats").textContent =
-        `Artikel: ${itemCount} · Gesamtmenge: ${totalQty} · Ausgaben: ${totalCost.toFixed(2).replace('.', ',')} €`;
-    }
-
-    // ---------- Artikel hinzufügen / bearbeiten ----------
-
-    document.getElementById("btn-add-item").onclick = () => openDialog(null);
-
-    body.onclick = (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const action = btn.dataset.action;
-      if (!id || !action) return;
-
-      const item = items.find((i) => i.id === id);
-      if (!item) return;
-
-      switch (action) {
-        case "toggle-flag":
-          item.flagged = !item.flagged;
-          saveData(items);
-          render();
-          break;
-        case "edit":
-          openDialog(id);
-          break;
-        case "show-photo":
-          if (item.photoDataUrl) {
-            photoDialogImg.src = item.photoDataUrl;
-            photoDialog.showModal();
-          }
-          break;
-        case "show-note":
-          if (item.note) {
-            noteDialogText.textContent = item.note;
-            noteDialog.showModal();
-          }
-          break;
-      }
-    };
-
-    // Menge direkt in Tabelle änderbar
-    document.addEventListener("input", (e) => {
-      if (!e.target.classList.contains("qty-input")) return;
-      const id = e.target.dataset.id;
-      const value = Number(e.target.value);
-      const item = items.find(i => i.id === id);
-      if (!item) return;
-      item.quantity = isNaN(value) ? 0 : value;
-      saveData(items);
-      render();
-    });
-
-    // Dialog öffnen / füllen
-    function openDialog(id) {
-      currentId = id;
-      tempPhotoDataUrl = null;
-
-      const item = id ? items.find((i) => i.id === id) || {} : {};
-
-      setInputValue("item-name", item.name || "");
-      setInputValue("item-number", item.articleNumber || "");
-      setInputValue("item-condition", item.condition || "");
-      setInputValue("item-size", item.size || "");
-      setInputValue("item-store", item.store || "");
-      setInputValue("item-quantity", item.quantity ?? 0);
-      setInputValue("item-unit-price", item.unitPrice ?? 0);
-      setInputValue("item-date", item.purchaseDate || "");
-      setInputValue("item-note", item.note || "");
-      document.getElementById("item-flagged").checked = !!item.flagged;
-
-      const info = document.getElementById("item-photo-info");
-      if (item.photoDataUrl) {
-        info.textContent = "Foto bereits gespeichert (optional neues wählen)";
-      } else {
-        info.textContent = "Kein Foto ausgewählt";
-      }
-      document.getElementById("item-photo").value = "";
-
-      dialog.showModal();
-    }
-
-    document.getElementById("item-photo").addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      const info = document.getElementById("item-photo-info");
-      if (!file) {
-        tempPhotoDataUrl = null;
-        info.textContent = "Kein Foto ausgewählt";
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        tempPhotoDataUrl = reader.result;
-        info.textContent = "Foto ausgewählt";
       };
-      reader.readAsDataURL(file);
-    });
 
-    // Buttons im Dialog (werden von onclick im HTML aufgerufen)
-    function onItemCancel() {
-      dialog.close();
-    }
+      // Filter
+      document.getElementById("search").oninput = () => render();
+      document.getElementById("filter-flag").onchange = () => render();
 
-    function onItemSave() {
-      const ok = saveItem();
-      if (ok !== false) {
-        dialog.close();
-      }
-    }
+      // Tabellenevents (Buttons in Zeilen)
+      tbody.onclick = (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (!id || !action) return;
 
-    // Speichern-Logik
-    function saveItem() {
-      const name = getInputValue("item-name").trim();
-      if (!name) {
-        alert("Bitte einen Artikelnamen eingeben.");
-        return false;
-      }
+        const item = items.find(i => i.id === id);
+        if (!item) return;
 
-      const articleNumber = getInputValue("item-number").trim();
-      const condition = getInputValue("item-condition").trim();
-      const size = getInputValue("item-size").trim();
-      const store = getInputValue("item-store").trim();
-      const quantity = Number(getInputValue("item-quantity") || 0);
-      const unitPrice = Number(getInputValue("item-unit-price") || 0);
-      const purchaseDate = getInputValue("item-date");
-      const note = getInputValue("item-note").trim();
-      const flagged = document.getElementById("item-flagged").checked;
-
-      let item = currentId ? items.find((i) => i.id === currentId) : null;
-      if (!item) {
-        item = { id: crypto.randomUUID() };
-        items.push(item);
-      }
-
-      item.name = name;
-      item.articleNumber = articleNumber;
-      item.condition = condition;
-      item.size = size;
-      item.store = store;
-      item.quantity = quantity;
-      item.unitPrice = unitPrice;
-      item.purchaseDate = purchaseDate;
-      item.note = note;
-      item.flagged = flagged;
-
-      if (tempPhotoDataUrl) {
-        item.photoDataUrl = tempPhotoDataUrl;
-      } else if (!item.photoDataUrl) {
-        item.photoDataUrl = null;
-      }
-
-      saveData(items);
-      render();
-      return true;
-    }
-
-    // Foto öffnen – iPhone-kompatibel (im neuen Tab -> „Bild sichern“)
-    function openPhotoInNewTab() {
-      if (!photoDialogImg.src) return;
-      window.open(photoDialogImg.src, "_blank");
-    }
-
-    // Filter & Import/Export
-    document.getElementById("search").oninput = () => { render(); };
-    document.getElementById("filter-flag").onchange = () => { render(); };
-    document.getElementById("btn-export").onclick = () => exportJson(items);
-
-    document.getElementById("input-import").onchange = async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      try {
-        const data = await importJson(file);
-        if (Array.isArray(data)) {
-          items = data;
-          saveData(items);
-          render();
-        } else {
-          alert("Ungültiges Datenformat in JSON.");
+        switch (action) {
+          case "toggle-flag":
+            item.flagged = !item.flagged;
+            saveData(items);
+            render();
+            break;
+          case "edit":
+            openItemDialog(id);
+            break;
+          case "show-photo":
+            if (item.photoDataUrl) {
+              photoDialogImg.src = item.photoDataUrl;
+              photoDialog.showModal();
+            }
+            break;
+          case "show-note":
+            if (item.note) {
+              noteDialogText.textContent = item.note;
+              noteDialog.showModal();
+            }
+            break;
         }
-      } catch (err) {
-        console.error(err);
-        alert("Ungültige JSON-Datei");
-      } finally {
-        e.target.value = "";
+      };
+
+      // Menge direkt in Tabelle ändern (ohne komplette Neurender)
+      document.addEventListener("input", (e) => {
+        if (!e.target.classList.contains("qty-input")) return;
+        const id = e.target.dataset.id;
+        const value = Number(e.target.value);
+        const item = items.find(i => i.id === id);
+        if (!item) return;
+
+        const qty = isNaN(value) ? 0 : value;
+        item.quantity = qty;
+        saveData(items);
+        updateStats();
+
+        // Badge "niedrig" direkt anpassen
+        const td = e.target.closest("td");
+        if (!td) return;
+        let badge = td.querySelector(".badge-low");
+        if (qty <= 1) {
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "badge-low";
+            badge.textContent = "niedrig";
+            td.appendChild(badge);
+          }
+        } else {
+          if (badge) badge.remove();
+        }
+      });
+
+      // ---------- CRUD & Rendering ----------
+
+      function loadData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch {
+          return [];
+        }
       }
-    };
 
-    // Helper
-    function formatPrice(v) {
-      const num = Number(v || 0);
-      return num.toFixed(2).replace(".", ",") + " €";
-    }
+      function saveData(list) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      }
 
-    function shorten(str, max) {
-      if (!str) return "";
-      return str.length > max ? str.slice(0, max - 1) + "…" : str;
-    }
+      function render() {
+        tbody.innerHTML = "";
 
-    function getInputValue(id) {
-      return document.getElementById(id).value;
-    }
+        const search = document.getElementById("search").value.toLowerCase();
+        const filter = document.getElementById("filter-flag").value;
 
-    function setInputValue(id, value) {
-      document.getElementById(id).value = value;
-    }
+        const filtered = items.filter((i) => {
+          if (search) {
+            const hay = (
+              (i.name || "") + " " +
+              (i.articleNumber || "") + " " +
+              (i.condition || "") + " " +
+              (i.size || "") + " " +
+              (i.store || "") + " " +
+              (i.note || "")
+            ).toLowerCase();
+            if (!hay.includes(search)) return false;
+          }
+          if (filter === "flagged" && !i.flagged) return false;
+          if (filter === "low" && Number(i.quantity || 0) > 1) return false;
+          return true;
+        });
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-    }
+        if (!filtered.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = '<td colspan="12" style="text-align:center;">Keine Artikel</td>';
+          tbody.appendChild(tr);
+          updateStats();
+          return;
+        }
 
-    // Init
-    render();
+        for (const item of filtered) {
+          const low = Number(item.quantity || 0) <= 1;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.flagged ? "⭐" : ""}</td>
+            <td>${escapeHtml(item.name || "")}</td>
+            <td>${escapeHtml(item.articleNumber || "")}</td>
+            <td>${escapeHtml(item.condition || "")}</td>
+            <td>${escapeHtml(item.size || "")}</td>
+            <td>${escapeHtml(item.store || "")}</td>
+            <td>
+              <input type="number" min="0"
+                value="${Number(item.quantity || 0)}"
+                class="qty-input"
+                data-id="${item.id}">
+              ${low ? '<span class="badge-low">niedrig</span>' : ""}
+            </td>
+            <td>${formatPrice(item.unitPrice)}</td>
+            <td>${escapeHtml(item.purchaseDate || "")}</td>
+            <td>${item.photoDataUrl ? '<span class="text-muted">Foto</span>' : '<span class="text-muted">–</span>'}</td>
+            <td>${item.note ? escapeHtml(shorten(item.note, 25)) : '<span class="text-muted">–</span>'}</td>
+            <td>
+              <button data-action="toggle-flag" data-id="${item.id}">★</button>
+              <button data-action="edit" data-id="${item.id}">✏️</button>
+              <button data-action="show-photo" data-id="${item.id}" ${item.photoDataUrl ? "" : "disabled"}>📷</button>
+              <button data-action="show-note" data-id="${item.id}" ${item.note ? "" : "disabled"}>📝</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
 
-    // Service Worker registrieren (deine Datei heißt sw.js)
-    if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").catch(console.error);
-}
-  </script>
+        updateStats();
+      }
+
+      function updateStats() {
+        const itemCount = items.length;
+        const totalQty = items.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
+        const totalCost = items.reduce((sum, i) => {
+          const qty = Number(i.quantity || 0);
+          const price = Number(i.unitPrice || 0);
+          return sum + qty * price;
+        }, 0);
+        document.getElementById("stats").textContent =
+          `Artikel: ${itemCount} · Gesamtmenge: ${totalQty} · Ausgaben: ${totalCost.toFixed(2).replace('.', ',')} €`;
+      }
+
+      // ---------- Dialog-Logik ----------
+
+      function openItemDialog(id) {
+        currentId = id;
+        tempPhotoDataUrl = null;
+
+        const item = id ? items.find(i => i.id === id) || {} : {};
+
+        setInputValue("item-name", item.name || "");
+        setInputValue("item-number", item.articleNumber || "");
+        setInputValue("item-condition", item.condition || "");
+        setInputValue("item-size", item.size || "");
+        setInputValue("item-store", item.store || "");
+        setInputValue("item-quantity", item.quantity ?? 0);
+        setInputValue("item-unit-price", item.unitPrice ?? 0);
+        setInputValue("item-date", item.purchaseDate || "");
+        setInputValue("item-note", item.note || "");
+        document.getElementById("item-flagged").checked = !!item.flagged;
+
+        const info = document.getElementById("item-photo-info");
+        if (item.photoDataUrl) {
+          info.textContent = "Foto gespeichert (optional neues wählen)";
+        } else {
+          info.textContent = "Kein Foto ausgewählt";
+        }
+        document.getElementById("item-photo").value = "";
+
+        itemDialog.showModal();
+      }
+
+      document.getElementById("item-photo").addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        const info = document.getElementById("item-photo-info");
+        if (!file) {
+          tempPhotoDataUrl = null;
+          info.textContent = "Kein Foto ausgewählt";
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          tempPhotoDataUrl = reader.result;
+          info.textContent = "Foto ausgewählt";
+        };
+        reader.readAsDataURL(file);
+      });
+
+      function cancelItem() {
+        itemDialog.close();
+      }
+
+      function saveItem() {
+        const name = getInputValue("item-name").trim();
+        if (!name) {
+          alert("Bitte Artikelnamen eingeben.");
+          return;
+        }
+
+        const articleNumber = getInputValue("item-number").trim();
+        const condition = getInputValue("item-condition").trim();
+        const size = getInputValue("item-size").trim();
+        const store = getInputValue("item-store").trim();
+        const quantity = Number(getInputValue("item-quantity") || 0);
+        const unitPrice = Number(getInputValue("item-unit-price") || 0);
+        const purchaseDate = getInputValue("item-date");
+        const note = getInputValue("item-note").trim();
+        const flagged = document.getElementById("item-flagged").checked;
+
+        let item = currentId ? items.find(i => i.id === currentId) : null;
+        if (!item) {
+          item = { id: crypto.randomUUID() };
+          items.push(item);
+        }
+
+        item.name = name;
+        item.articleNumber = articleNumber;
+        item.condition = condition;
+        item.size = size;
+        item.store = store;
+        item.quantity = quantity;
+        item.unitPrice = unitPrice;
+        item.purchaseDate = purchaseDate;
+        item.note = note;
+        item.flagged = flagged;
+
+        if (tempPhotoDataUrl) {
+          item.photoDataUrl = tempPhotoDataUrl;
+        } else if (!item.photoDataUrl) {
+          item.photoDataUrl = null;
+        }
+
+        saveData(items);
+        render();
+        itemDialog.close();
+      }
+
+      // ---------- Foto & Notiz ----------
+
+      function openPhotoNewTab() {
+        if (!photoDialogImg.src) return;
+        window.open(photoDialogImg.src, "_blank");
+      }
+
+      // ---------- JSON Import/Export ----------
+
+      function exportJson(list) {
+        const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "lager-backup.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function importJson(file) {
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => {
+            try {
+              resolve(JSON.parse(r.result));
+            } catch (e) {
+              reject(e);
+            }
+          };
+          r.onerror = reject;
+          r.readAsText(file);
+        });
+      }
+
+      // ---------- Inventur: XLSX (Numbers) ----------
+
+      function exportInventurXLSX(list) {
+        if (!window.XLSX) {
+          alert("XLSX Bibliothek nicht geladen.");
+          return;
+        }
+
+        const today = new Date().toLocaleDateString("de-DE");
+
+        const rows = list.map(i => ({
+          "Artikelname": i.name || "",
+          "Artikelnummer": i.articleNumber || "",
+          "Zustand": i.condition || "",
+          "Größe": i.size || "",
+          "Menge": Number(i.quantity ?? 0),
+          "Preis/Stk (€)": Number(i.unitPrice ?? 0),
+          "Gesamt (€)": Number(i.quantity ?? 0) * Number(i.unitPrice ?? 0),
+          "Notiz": (i.note || "").slice(0, 50)
+        }));
+
+        const total = rows.reduce((sum, r) => sum + r["Gesamt (€)"], 0);
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet([]);
+
+        const headerRows = [
+          { A: "Inventur – Lagerbestand" },
+          { A: "Erstellt am: " + today },
+          {}
+        ];
+
+        XLSX.utils.sheet_add_json(ws, headerRows, { origin: "A1", skipHeader: true });
+        XLSX.utils.sheet_add_json(ws, rows, { origin: "A4" });
+        XLSX.utils.sheet_add_json(
+          ws,
+          [{ "Artikelname": "GESAMT", "Gesamt (€)": total }],
+          { origin: "A" + (rows.length + 6), skipHeader: true }
+        );
+
+        ws["!cols"] = [
+          { wch: 25 }, // Name
+          { wch: 15 }, // Nr
+          { wch: 10 }, // Zustand
+          { wch: 10 }, // Größe
+          { wch: 8 },  // Menge
+          { wch: 12 }, // Preis
+          { wch: 12 }, // Gesamt
+          { wch: 30 }  // Notiz
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Inventur");
+        XLSX.writeFile(wb, "Inventur-Lagerbestand.xlsx");
+      }
+
+      // ---------- Inventur: PDF ----------
+
+      function exportInventurPDF(list) {
+        const jspdf = window.jspdf;
+        if (!jspdf || !jspdf.jsPDF) {
+          alert("PDF Bibliothek nicht geladen.");
+          return;
+        }
+
+        const { jsPDF } = jspdf;
+        const doc = new jsPDF("p", "mm", "a4");
+
+        const today = new Date().toLocaleDateString("de-DE");
+
+        let y = 15;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("Inventur – Lagerbestand", 10, y);
+        y += 6;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("Erstellt am: " + today, 10, y);
+        y += 8;
+
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text("Name", 10, y);
+        doc.text("Nr.", 60, y);
+        doc.text("Menge", 90, y);
+        doc.text("€/Stk", 110, y);
+        doc.text("Gesamt", 130, y);
+        y += 4;
+        doc.setLineWidth(0.2);
+        doc.line(10, y, 200, y);
+        y += 3;
+
+        doc.setFont("helvetica", "normal");
+
+        let total = 0;
+
+        list.forEach((i) => {
+          const name = (i.name || "").toString();
+          const nr = (i.articleNumber || "").toString();
+          const qty = Number(i.quantity || 0);
+          const price = Number(i.unitPrice || 0);
+          const sum = qty * price;
+          total += sum;
+
+          if (y > 270) {
+            doc.addPage();
+            y = 15;
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.text("Inventur – Lagerbestand (Fortsetzung)", 10, y);
+            y += 6;
+
+            doc.setFontSize(8);
+            doc.text("Name", 10, y);
+            doc.text("Nr.", 60, y);
+            doc.text("Menge", 90, y);
+            doc.text("€/Stk", 110, y);
+            doc.text("Gesamt", 130, y);
+            y += 4;
+            doc.line(10, y, 200, y);
+            y += 3;
+            doc.setFont("helvetica", "normal");
+          }
+
+          doc.text(shorten(name, 28), 10, y);
+          doc.text(shorten(nr, 18), 60, y);
+          doc.text(String(qty), 90, y, { align: "right" });
+          doc.text(price.toFixed(2).replace(".", ","), 120, y, { align: "right" });
+          doc.text(sum.toFixed(2).replace(".", ","), 150, y, { align: "right" });
+          y += 4;
+        });
+
+        y += 4;
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("GESAMTWERT: " + total.toFixed(2).replace(".", ",") + " €", 10, y);
+
+        doc.save("Inventur-Lagerbestand.pdf");
+      }
+
+      // ---------- Helper ----------
+
+      function formatPrice(v) {
+        const num = Number(v || 0);
+        return num.toFixed(2).replace(".", ",") + " €";
+      }
+
+      function shorten(str, max) {
+        if (!str) return "";
+        return str.length > max ? str.slice(0, max - 1) + "…";
+      }
+
+      function getInputValue(id) {
+        return document.getElementById(id).value;
+      }
+
+      function setInputValue(id, value) {
+        document.getElementById(id).value = value;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // Initial render
+      render();
+
+      // Service Worker registrieren (sw.js im Root)
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(console.error);
+      }
+    </script>
 </body>
 </html>
