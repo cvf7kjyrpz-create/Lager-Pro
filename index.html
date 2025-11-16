@@ -28,7 +28,7 @@
       --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
-    /* Darkmode (automatisch nach System) */
+    /* Darkmode (automatisch) */
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #15171b;
@@ -128,6 +128,12 @@
     button.icon-btn[disabled] {
       opacity: 0.4;
       cursor: default;
+    }
+
+    .icon-btn svg {
+      width: 14px;
+      height: 14px;
+      display: block;
     }
 
     .import-label {
@@ -268,6 +274,7 @@
       color: var(--text-muted);
     }
 
+    /* Mobile: Tabelle schmal machen – weniger Spalten anzeigen */
     @media (max-width: 800px) {
       .controls,
       .filters {
@@ -281,7 +288,19 @@
       }
 
       .data-table {
-        min-width: 600px;
+        min-width: 0;
+      }
+
+      /* Größe (5), Wo gekauft (6), Foto (10), Notiz (11) ausblenden */
+      .data-table th:nth-child(5),
+      .data-table td:nth-child(5),
+      .data-table th:nth-child(6),
+      .data-table td:nth-child(6),
+      .data-table th:nth-child(10),
+      .data-table td:nth-child(10),
+      .data-table th:nth-child(11),
+      .data-table td:nth-child(11) {
+        display: none;
       }
     }
   </style>
@@ -336,7 +355,7 @@
 
   <!-- Artikel-Dialog -->
   <dialog id="item-dialog">
-    <form id="item-form" method="dialog" class="form-grid">
+    <form id="item-form" class="form-grid">
       <h3 id="dialog-title">Artikel</h3>
 
       <label>
@@ -401,8 +420,8 @@
       </label>
 
       <menu class="dialog-menu">
-        <button value="cancel">Abbrechen</button>
-        <button value="save" class="primary">Speichern</button>
+        <button type="button" id="item-cancel-btn">Abbrechen</button>
+        <button type="button" id="item-save-btn" class="primary">Speichern</button>
       </menu>
     </form>
   </dialog>
@@ -412,7 +431,7 @@
     <div class="dialog-photo-content">
       <img id="photo-dialog-img" alt="Artikel-Foto">
       <menu class="dialog-menu">
-        <button id="photo-dialog-close" class="primary">Schließen</button>
+        <button id="photo-dialog-close" class="primary" type="button">Schließen</button>
       </menu>
     </div>
   </dialog>
@@ -423,15 +442,38 @@
       <h3>Notiz</h3>
       <pre id="note-dialog-text"></pre>
       <menu class="dialog-menu">
-        <button id="note-dialog-close" class="primary">Schließen</button>
+        <button id="note-dialog-close" class="primary" type="button">Schließen</button>
       </menu>
     </div>
   </dialog>
 
   <script>
+    // --------- kleine SVG-Icons (Grafik, kein Emoji) ----------
+
+    const ICON_STAR = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.5l2.9 6 6.6.8-4.8 4.3 1.4 6.5L12 16.8 5.9 20.1l1.4-6.5-4.8-4.3 6.6-.8z" fill="currentColor"/>
+      </svg>
+    `;
+    const ICON_EDIT = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 17.25V20h2.75L17.8 8.94l-2.75-2.75L4 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.13 1.13 3.75 3.75 1.13-1.13z" fill="currentColor"/>
+      </svg>
+    `;
+    const ICON_PHOTO = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5h4l1-1h6l1 1h4v14H4V5zm2 4a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm12 8-4.5-6-3.5 4.5-2.5-3L6 17h12z" fill="currentColor"/>
+      </svg>
+    `;
+    const ICON_NOTE = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 4h12v10l-4 4H6V4zm8 11h3.5L14 18.5V15zM8 7h8v2H8V7zm0 4h8v2H8v-2z" fill="currentColor"/>
+      </svg>
+    `;
+
     // ---------- Storage & Export/Import ----------
 
-    const STORAGE_KEY = "lager-app-data-v2";
+    const STORAGE_KEY = "lager-app-data-v3";
 
     function loadData() {
       try {
@@ -543,10 +585,10 @@
           </td>
           <td>
             <div style="display:flex;gap:.2rem;flex-wrap:wrap;">
-              <button class="icon-btn" title="Artikel markieren" data-action="toggle-flag" data-id="${item.id}">⭐</button>
-              <button class="icon-btn" title="Artikel bearbeiten" data-action="edit" data-id="${item.id}">✏️</button>
-              <button class="icon-btn" title="Foto anzeigen" data-action="show-photo" data-id="${item.id}" ${item.photoDataUrl ? "" : "disabled"}>🖼️</button>
-              <button class="icon-btn" title="Notiz anzeigen" data-action="show-note" data-id="${item.id}" ${item.note ? "" : "disabled"}>📝</button>
+              <button class="icon-btn" title="Artikel markieren" data-action="toggle-flag" data-id="${item.id}">${ICON_STAR}</button>
+              <button class="icon-btn" title="Artikel bearbeiten" data-action="edit" data-id="${item.id}">${ICON_EDIT}</button>
+              <button class="icon-btn" title="Foto anzeigen" data-action="show-photo" data-id="${item.id}" ${item.photoDataUrl ? "" : "disabled"}>${ICON_PHOTO}</button>
+              <button class="icon-btn" title="Notiz anzeigen" data-action="show-note" data-id="${item.id}" ${item.note ? "" : "disabled"}>${ICON_NOTE}</button>
             </div>
           </td>
         `;
@@ -554,6 +596,8 @@
         body.appendChild(tr);
       }
     }
+
+    // ---------- Artikel hinzufügen / bearbeiten ----------
 
     document.getElementById("btn-add-item").onclick = () => openDialog(null);
 
@@ -591,6 +635,20 @@
       }
     };
 
+    const itemCancelBtn = document.getElementById("item-cancel-btn");
+    const itemSaveBtn = document.getElementById("item-save-btn");
+
+    itemCancelBtn.addEventListener("click", () => {
+      dialog.close();
+    });
+
+    itemSaveBtn.addEventListener("click", () => {
+      saveItem();   // hier wird wirklich gespeichert
+      dialog.close();
+    });
+
+    document.getElementById("item-form").addEventListener("submit", (e) => e.preventDefault());
+
     function openDialog(id) {
       currentId = id;
       tempPhotoDataUrl = null;
@@ -619,13 +677,6 @@
       dialog.showModal();
     }
 
-    dialog.addEventListener("close", () => {
-      if (dialog.returnValue !== "save") return;
-      saveItem();
-    });
-
-    document.getElementById("item-form").addEventListener("submit", (e) => e.preventDefault());
-
     document.getElementById("item-photo").addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       const info = document.getElementById("item-photo-info");
@@ -644,6 +695,11 @@
 
     function saveItem() {
       const name = getInputValue("item-name").trim();
+      if (!name) {
+        alert("Bitte einen Artikelnamen eingeben.");
+        return;
+      }
+
       const articleNumber = getInputValue("item-number").trim();
       const condition = getInputValue("item-condition").trim();
       const size = getInputValue("item-size").trim();
@@ -681,6 +737,8 @@
       render();
     }
 
+    // ---------- Filter & Import/Export ----------
+
     document.getElementById("search").oninput = render;
     document.getElementById("filter-flag").onchange = render;
 
@@ -705,6 +763,8 @@
         e.target.value = "";
       }
     };
+
+    // ---------- Helfer ----------
 
     function formatPrice(v) {
       const num = Number(v || 0);
@@ -736,7 +796,6 @@
     // ---------- Service Worker Registrierung ----------
 
     if ("serviceWorker" in navigator) {
-      // wichtig: dein File heißt sW.JS (Groß-/Kleinschreibung beachten)
       navigator.serviceWorker.register("./sW.JS").catch(console.error);
     }
   </script>
