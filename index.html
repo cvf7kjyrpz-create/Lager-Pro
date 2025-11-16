@@ -274,7 +274,7 @@
       color: var(--text-muted);
     }
 
-    /* Mobile: Tabelle schmal machen – weniger Spalten anzeigen */
+    /* Mobile: Tabelle schmaler machen */
     @media (max-width: 800px) {
       .controls,
       .filters {
@@ -291,7 +291,7 @@
         min-width: 0;
       }
 
-      /* Größe (5), Wo gekauft (6), Foto (10), Notiz (11) ausblenden */
+      /* Größe, Wo gekauft, Foto, Notiz ausblenden */
       .data-table th:nth-child(5),
       .data-table td:nth-child(5),
       .data-table th:nth-child(6),
@@ -355,7 +355,7 @@
 
   <!-- Artikel-Dialog -->
   <dialog id="item-dialog">
-    <form id="item-form" class="form-grid">
+    <form id="item-form" class="form-grid" onsubmit="return false;">
       <h3 id="dialog-title">Artikel</h3>
 
       <label>
@@ -420,9 +420,10 @@
       </label>
 
       <menu class="dialog-menu">
-  <button type="button" id="item-cancel-btn">Abbrechen</button>
-  <button type="button" id="item-save-btn" class="primary">Speichern</button>
-</menu>
+        <!-- WICHTIG: onclick statt JS-Listener -->
+        <button type="button" onclick="onItemCancel()">Abbrechen</button>
+        <button type="button" class="primary" onclick="onItemSave()">Speichern</button>
+      </menu>
     </form>
   </dialog>
 
@@ -431,7 +432,7 @@
     <div class="dialog-photo-content">
       <img id="photo-dialog-img" alt="Artikel-Foto">
       <menu class="dialog-menu">
-        <button id="photo-dialog-close" class="primary" type="button">Schließen</button>
+        <button class="primary" type="button" onclick="document.getElementById('photo-dialog').close()">Schließen</button>
       </menu>
     </div>
   </dialog>
@@ -442,36 +443,32 @@
       <h3>Notiz</h3>
       <pre id="note-dialog-text"></pre>
       <menu class="dialog-menu">
-        <button id="note-dialog-close" class="primary" type="button">Schließen</button>
+        <button class="primary" type="button" onclick="document.getElementById('note-dialog').close()">Schließen</button>
       </menu>
     </div>
   </dialog>
 
   <script>
-    // --------- kleine SVG-Icons (Grafik, kein Emoji) ----------
+    // ---------- SVG-Icons ----------
 
     const ICON_STAR = `
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 2.5l2.9 6 6.6.8-4.8 4.3 1.4 6.5L12 16.8 5.9 20.1l1.4-6.5-4.8-4.3 6.6-.8z" fill="currentColor"/>
-      </svg>
-    `;
+      </svg>`;
     const ICON_EDIT = `
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 17.25V20h2.75L17.8 8.94l-2.75-2.75L4 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.13 1.13 3.75 3.75 1.13-1.13z" fill="currentColor"/>
-      </svg>
-    `;
+      </svg>`;
     const ICON_PHOTO = `
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 5h4l1-1h6l1 1h4v14H4V5zm2 4a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm12 8-4.5-6-3.5 4.5-2.5-3L6 17h12z" fill="currentColor"/>
-      </svg>
-    `;
+      </svg>`;
     const ICON_NOTE = `
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M6 4h12v10l-4 4H6V4zm8 11h3.5L14 18.5V15zM8 7h8v2H8V7zm0 4h8v2H8v-2z" fill="currentColor"/>
-      </svg>
-    `;
+      </svg>`;
 
-    // ---------- Storage & Export/Import ----------
+    // ---------- Storage & Daten ----------
 
     const STORAGE_KEY = "lager-app-data-v3";
 
@@ -513,7 +510,7 @@
       });
     }
 
-    // ---------- App-Logik ----------
+    // ---------- App-State ----------
 
     let items = loadData() || [];
     let currentId = null;
@@ -523,12 +520,10 @@
     const dialog = document.getElementById("item-dialog");
     const photoDialog = document.getElementById("photo-dialog");
     const noteDialog = document.getElementById("note-dialog");
-
     const photoDialogImg = document.getElementById("photo-dialog-img");
     const noteDialogText = document.getElementById("note-dialog-text");
 
-    document.getElementById("photo-dialog-close").onclick = () => photoDialog.close();
-    document.getElementById("note-dialog-close").onclick = () => noteDialog.close();
+    // ---------- Rendering ----------
 
     function render() {
       body.innerHTML = "";
@@ -592,7 +587,6 @@
             </div>
           </td>
         `;
-
         body.appendChild(tr);
       }
     }
@@ -634,20 +628,6 @@
           break;
       }
     };
-
-    const itemCancelBtn = document.getElementById("item-cancel-btn");
-    const itemSaveBtn = document.getElementById("item-save-btn");
-
-    itemCancelBtn.addEventListener("click", () => {
-      dialog.close();
-    });
-
-    itemSaveBtn.addEventListener("click", () => {
-      saveItem();   // hier wird wirklich gespeichert
-      dialog.close();
-    });
-
-    document.getElementById("item-form").addEventListener("submit", (e) => e.preventDefault());
 
     function openDialog(id) {
       currentId = id;
@@ -693,11 +673,26 @@
       reader.readAsDataURL(file);
     });
 
+    // ---------- Buttons im Dialog (werden inline via onclick aufgerufen) ----------
+
+    function onItemCancel() {
+      dialog.close();
+    }
+
+    function onItemSave() {
+      const ok = saveItem();
+      if (ok !== false) {
+        dialog.close();
+      }
+    }
+
+    // ---------- Speichern-Logik ----------
+
     function saveItem() {
       const name = getInputValue("item-name").trim();
       if (!name) {
         alert("Bitte einen Artikelnamen eingeben.");
-        return;
+        return false;
       }
 
       const articleNumber = getInputValue("item-number").trim();
@@ -735,13 +730,13 @@
 
       saveData(items);
       render();
+      return true;
     }
 
     // ---------- Filter & Import/Export ----------
 
     document.getElementById("search").oninput = render;
     document.getElementById("filter-flag").onchange = render;
-
     document.getElementById("btn-export").onclick = () => exportJson(items);
 
     document.getElementById("input-import").onchange = async (e) => {
@@ -764,7 +759,7 @@
       }
     };
 
-    // ---------- Helfer ----------
+    // ---------- Helper ----------
 
     function formatPrice(v) {
       const num = Number(v || 0);
@@ -791,9 +786,11 @@
         .replace(/>/g, "&gt;");
     }
 
+    // ---------- Init ----------
+
     render();
 
-    // ---------- Service Worker Registrierung ----------
+    // ---------- Service Worker ----------
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sW.JS").catch(console.error);
