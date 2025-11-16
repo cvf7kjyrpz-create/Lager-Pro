@@ -2,749 +2,168 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lager Pro v3</title>
+  <title>Lager App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- PWA / iOS -->
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#05060a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Lager Pro" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#2f7d32">
 
-  <style>
-    :root {
-      --bg: #05060a;
-      --card: #0d0f18;
-      --border: #1f2433;
-      --accent: #3ea6ff;
-      --text: #f5f7ff;
-      --text-soft: #b8bfd9;
-      --danger: #ff4b5c;
-    }
+  <!-- iOS PWA Support -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      margin: 0;
-      background: #05060a;
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-      padding: 12px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .app {
-      width: 100%;
-      max-width: 900px;
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: 22px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      padding: 12px;
-      margin-bottom: 14px;
-    }
-
-    h2 {
-      margin: 0 0 8px;
-      font-size: 17px;
-    }
-
-    label {
-      display: block;
-      margin-top: 7px;
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    input, select, textarea {
-      width: 100%;
-      margin-top: 3px;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #222a40;
-      background: #080a12;
-      color: var(--text);
-      font-size: 14px;
-    }
-
-    textarea {
-      min-height: 60px;
-      resize: vertical;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: rgba(62,166,255,0.8);
-      box-shadow: 0 0 0 1px rgba(62,166,255,0.4);
-    }
-
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    @media (max-width: 600px) {
-      .row-2 {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .btn {
-      border-radius: 8px;
-      border: none;
-      padding: 9px 14px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .btn-main {
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
-    }
-
-    .btn-ghost {
-      background: #12141f;
-      color: var(--text-soft);
-      border: 1px solid #2a3147;
-    }
-
-    .btn-row {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .summary-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .summary-box {
-      flex: 1;
-      min-width: 100px;
-      background: #101321;
-      border-radius: 8px;
-      border: 1px solid #262c44;
-      padding: 6px;
-      font-size: 12px;
-    }
-
-    .summary-label {
-      color: var(--text-soft);
-    }
-
-    .summary-value {
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    #search {
-      margin-bottom: 8px;
-    }
-
-    .item-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 60vh;
-      overflow-y: auto;
-    }
-
-    .empty {
-      font-size: 12px;
-      color: var(--text-soft);
-      text-align: center;
-      padding: 8px;
-    }
-
-    .item-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 6px;
-      padding: 7px;
-      background: #090c18;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .item-row.marked {
-      border-color: gold;
-      background: rgba(255,215,0,0.1);
-    }
-
-    .item-main {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .item-title {
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .item-line {
-      font-size: 10px;
-      color: var(--text-soft);
-      margin-bottom: 1px;
-    }
-
-    .item-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .icon-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      border: 1px solid #2a3147;
-      background: #12141f;
-      color: #f5f7ff;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .icon-btn.marked {
-      border-color: gold;
-      background: rgba(255,215,0,0.25);
-      color: gold;
-    }
-
-    .icon-btn.danger {
-      border-color: rgba(255,75,92,0.8);
-      color: #ffb8c4;
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-
-    .modal {
-      background: #0d0f18;
-      border-radius: 10px;
-      border: 1px solid #2a3147;
-      max-width: 90%;
-      max-height: 90%;
-      padding: 10px;
-      color: var(--text);
-      overflow: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-size: 15px;
-    }
-
-    .modal-close {
-      border-radius: 7px;
-      border: 1px solid #2a3147;
-      background: #12141f;
-      color: var(--text-soft);
-      padding: 4px 8px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .modal img {
-      max-width: 100%;
-      border-radius: 8px;
-      display: block;
-    }
-  </style>
+  <link rel="stylesheet" href="styles/style.css" />
 </head>
+
 <body>
-<div class="app">
+  <header class="app-header">
+    <h1>Lager App</h1>
+  </header>
 
-  <h1>Lager Pro v3</h1>
+  <main>
+    <section class="controls">
+      <button id="btn-add-item" class="primary">+ Artikel</button>
+      <button id="btn-export">Export (JSON)</button>
+      <label class="import-label">
+        Import
+        <input type="file" id="input-import" hidden accept="application/json">
+      </label>
+    </section>
 
-  <!-- FORMULAR -->
-  <div class="card">
-    <h2>Artikel anlegen / bearbeiten</h2>
+    <section class="filters">
+      <input id="search" type="search" placeholder="Suche nach Name, Nummer, Zustand, Notiz …">
+      <select id="filter-flag">
+        <option value="all">Alle</option>
+        <option value="flagged">Markierte</option>
+        <option value="low">Niedriger Bestand</option>
+      </select>
+    </section>
 
-    <form id="item-form">
-      <input type="hidden" id="field-id" />
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>★</th>
+            <th>Artikelname</th>
+            <th>Artikelnr.</th>
+            <th>Zustand</th>
+            <th>Größe</th>
+            <th>Wo gekauft</th>
+            <th>Menge</th>
+            <th>€/Stk</th>
+            <th>Kaufdatum</th>
+            <th>Foto</th>
+            <th>Notiz</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body"></tbody>
+      </table>
+    </div>
+  </main>
 
-      <label for="field-name">Artikelname *</label>
-      <input id="field-name" required placeholder="z.B. Jacke, Schuhe, Werkzeug …" />
+  <!-- Artikel-Dialog -->
+  <dialog id="item-dialog">
+    <form id="item-form" method="dialog" class="form-grid">
+      <h3 id="dialog-title">Artikel</h3>
 
-      <label for="field-sku">Artikelnummer</label>
-      <input id="field-sku" placeholder="z.B. interne Nummer, EAN …" />
+      <label>
+        Artikelname
+        <input id="item-name" required>
+      </label>
 
-      <div class="row-2">
-        <div>
-          <label for="field-condition">Zustand</label>
-          <select id="field-condition">
-            <option value="">Auswählen…</option>
-            <option>Neu</option>
-            <option>Gebraucht</option>
-          </select>
-        </div>
-        <div>
-          <label for="field-size">Größe</label>
-          <input id="field-size" placeholder="z.B. M, 42, 1L …" />
-        </div>
-      </div>
+      <label>
+        Artikelnummer
+        <input id="item-number">
+      </label>
 
-      <label for="field-where">Wo gekauft</label>
-      <input id="field-where" placeholder="z.B. Vinted, eBay, Laden …" />
+      <label>
+        Zustand
+        <select id="item-condition">
+          <option value="">– bitte wählen –</option>
+          <option value="Neu">Neu</option>
+          <option value="Wie neu">Wie neu</option>
+          <option value="Gebraucht">Gebraucht</option>
+        </select>
+      </label>
 
-      <div class="row-2">
-        <div>
-          <label for="field-qty">Menge *</label>
-          <input id="field-qty" type="number" min="1" value="1" />
-        </div>
-        <div>
-          <label for="field-price">Einkaufspreis pro Stück (€)</label>
-          <input id="field-price" type="number" step="0.01" min="0" />
-        </div>
-      </div>
+      <label>
+        Größe
+        <input id="item-size">
+      </label>
 
-      <!-- Gesamtpreis wird NICHT eingegeben, sondern automatisch berechnet -->
+      <label>
+        Wo gekauft
+        <input id="item-store">
+      </label>
 
-      <label for="field-date">Kaufdatum</label>
-      <input id="field-date" type="date" />
+      <label>
+        Menge
+        <input id="item-quantity" type="number" min="0" value="0">
+      </label>
 
-      <label for="field-notes">Notiz</label>
-      <textarea id="field-notes" placeholder="Zustand, Besonderheiten, Seriennummer …"></textarea>
+      <label>
+        Einkaufspreis pro Stück (€)
+        <input id="item-unit-price" type="number" min="0" step="0.01" value="0">
+      </label>
 
-      <label for="field-photo">Foto (optional)</label>
-      <input id="field-photo" type="file" accept="image/*" />
+      <label>
+        Kaufdatum
+        <input id="item-date" type="date">
+      </label>
 
-      <div class="btn-row">
-        <button type="submit" class="btn btn-main">Speichern</button>
-        <button type="button" id="btn-reset" class="btn btn-ghost">Formular leeren</button>
-      </div>
+      <label class="full-width">
+        Notiz
+        <textarea id="item-note" rows="3"></textarea>
+      </label>
+
+      <label>
+        Foto
+        <input id="item-photo" type="file" accept="image/*">
+        <small id="item-photo-info" class="hint">Kein Foto ausgewählt</small>
+      </label>
+
+      <label class="checkbox">
+        <input id="item-flagged" type="checkbox">
+        Artikel markieren
+      </label>
+
+      <menu class="dialog-menu">
+        <button value="cancel">Abbrechen</button>
+        <button value="save" class="primary">Speichern</button>
+      </menu>
     </form>
-  </div>
+  </dialog>
 
-  <!-- ÜBERSICHT -->
-  <div class="card">
-    <h2>Lagerübersicht</h2>
-
-    <div class="summary-row">
-      <div class="summary-box">
-        <div class="summary-label">Artikel (Positionen)</div>
-        <div class="summary-value" id="sum-items">0</div>
-      </div>
-      <div class="summary-box">
-        <div class="summary-label">Gesamtmenge</div>
-        <div class="summary-value" id="sum-qty">0</div>
-      </div>
-      <div class="summary-box">
-        <div class="summary-label">Gesamter Einkaufswert</div>
-        <div class="summary-value" id="sum-value">0,00 €</div>
-      </div>
+  <!-- Foto-Dialog -->
+  <dialog id="photo-dialog">
+    <div class="dialog-photo-content">
+      <img id="photo-dialog-img" alt="Artikel-Foto">
+      <menu class="dialog-menu">
+        <button id="photo-dialog-close" class="primary">Schließen</button>
+      </menu>
     </div>
+  </dialog>
 
-    <input id="search" placeholder="Suche nach Name, Nummer, Ort …" />
-
-    <div class="item-list" id="item-list">
-      <div class="empty">Noch keine Artikel.</div>
+  <!-- Notiz-Dialog -->
+  <dialog id="note-dialog">
+    <div class="dialog-note-content">
+      <h3>Notiz</h3>
+      <pre id="note-dialog-text"></pre>
+      <menu class="dialog-menu">
+        <button id="note-dialog-close" class="primary">Schließen</button>
+      </menu>
     </div>
-  </div>
+  </dialog>
 
-  <!-- MODAL -->
-  <div class="modal-backdrop" id="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modal-title"></h3>
-        <button class="modal-close" id="modal-close">Schließen</button>
-      </div>
-      <div id="modal-content"></div>
-    </div>
-  </div>
+  <script type="module" src="src/app.js"></script>
 
-</div>
-
-<script>
-  const STORAGE_KEY = "lager_pro_v3";
-  let items = [];
-
-  // DOM-Referenzen
-  const form = document.getElementById("item-form");
-  const fieldId = document.getElementById("field-id");
-  const fieldName = document.getElementById("field-name");
-  const fieldSku = document.getElementById("field-sku");
-  const fieldCondition = document.getElementById("field-condition");
-  const fieldSize = document.getElementById("field-size");
-  const fieldWhere = document.getElementById("field-where");
-  const fieldQty = document.getElementById("field-qty");
-  const fieldPrice = document.getElementById("field-price");
-  const fieldDate = document.getElementById("field-date");
-  const fieldNotes = document.getElementById("field-notes");
-  const fieldPhoto = document.getElementById("field-photo");
-
-  const sumItemsEl = document.getElementById("sum-items");
-  const sumQtyEl = document.getElementById("sum-qty");
-  const sumValueEl = document.getElementById("sum-value");
-  const searchInput = document.getElementById("search");
-  const listEl = document.getElementById("item-list");
-  const resetBtn = document.getElementById("btn-reset");
-
-  const modalBackdrop = document.getElementById("modal-backdrop");
-  const modalTitle = document.getElementById("modal-title");
-  const modalContent = document.getElementById("modal-content");
-  const modalClose = document.getElementById("modal-close");
-
-  // ----- Hilfsfunktionen Speicher -----
-  function loadItems() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const data = JSON.parse(raw);
-      return Array.isArray(data) ? data : [];
-    } catch (e) {
-      console.error(e);
-      return [];
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js");
     }
-  }
-
-  function saveItems() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }
-
-  function genId() {
-    return "itm_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
-
-  // ----- Modal -----
-  function openModal(title, html) {
-    modalTitle.textContent = title;
-    modalContent.innerHTML = html;
-    modalBackdrop.style.display = "flex";
-  }
-
-  function closeModal() {
-    modalBackdrop.style.display = "none";
-    modalTitle.textContent = "";
-    modalContent.innerHTML = "";
-  }
-
-  modalClose.addEventListener("click", closeModal);
-  modalBackdrop.addEventListener("click", (e) => {
-    if (e.target === modalBackdrop) {
-      closeModal();
-    }
-  });
-
-  // ----- Render -----
-  function render() {
-    const term = searchInput.value.trim().toLowerCase();
-    listEl.innerHTML = "";
-
-    if (!items.length) {
-      const div = document.createElement("div");
-      div.className = "empty";
-      div.textContent = "Noch keine Artikel.";
-      listEl.appendChild(div);
-    }
-
-    // Sortierung: Kaufdatum, neu zuerst (leere Daten nach unten)
-    const sorted = items.slice().sort((a, b) => {
-      const da = a.date || "";
-      const db = b.date || "";
-      return db.localeCompare(da);
-    });
-
-    let totalItems = sorted.length;
-    let totalQty = 0;
-    let totalValue = 0;
-
-    sorted
-      .filter((item) => {
-        if (!term) return true;
-        const text = (
-          (item.name || "") +
-          " " +
-          (item.sku || "") +
-          " " +
-          (item.where || "") +
-          " " +
-          (item.condition || "") +
-          " " +
-          (item.size || "")
-        ).toLowerCase();
-        return text.includes(term);
-      })
-      .forEach((item) => {
-        totalQty += item.qty || 0;
-        totalValue += item.totalPrice || 0;
-
-        const row = document.createElement("div");
-        row.className = "item-row" + (item.flagged ? " marked" : "");
-
-        const main = document.createElement("div");
-        main.className = "item-main";
-
-        const title = document.createElement("div");
-        title.className = "item-title";
-        title.textContent = item.name;
-
-        const line1 = document.createElement("div");
-        line1.className = "item-line";
-        const parts1 = [];
-        if (item.sku) parts1.push("Art.-Nr.: " + item.sku);
-        if (item.condition) parts1.push(item.condition);
-        if (item.size) parts1.push("Größe: " + item.size);
-        if (item.where) parts1.push("gekauft: " + item.where);
-        line1.textContent = parts1.join(" · ") || "Keine weiteren Angaben";
-
-        const line2 = document.createElement("div");
-        line2.className = "item-line";
-        let preisText = "Menge: " + (item.qty || 0);
-        if (item.priceUnit != null) {
-          preisText += " · Stk: " + item.priceUnit.toFixed(2) + " €";
-        }
-        if (item.totalPrice != null) {
-          preisText += " · Gesamt: " + item.totalPrice.toFixed(2) + " €";
-        }
-        line2.textContent = preisText;
-
-        const line3 = document.createElement("div");
-        line3.className = "item-line";
-        line3.textContent = item.date ? "Gekauft am " + item.date : "";
-
-        main.appendChild(title);
-        main.appendChild(line1);
-        main.appendChild(line2);
-        if (line3.textContent) main.appendChild(line3);
-
-        const actions = document.createElement("div");
-        actions.className = "item-actions";
-
-        // ⭐ Markieren
-        const btnFlag = document.createElement("button");
-        btnFlag.className = "icon-btn" + (item.flagged ? " marked" : "");
-        btnFlag.textContent = "⭐";
-        btnFlag.addEventListener("click", (e) => {
-          e.stopPropagation();
-          item.flagged = !item.flagged;
-          saveItems();
-          render();
-        });
-
-        // ✏️ Bearbeiten
-        const btnEdit = document.createElement("button");
-        btnEdit.className = "icon-btn";
-        btnEdit.textContent = "✏️";
-        btnEdit.addEventListener("click", (e) => {
-          e.stopPropagation();
-          fillForm(item);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        });
-
-        // 📝 Notiz
-        const btnNotes = document.createElement("button");
-        btnNotes.className = "icon-btn";
-        btnNotes.textContent = "📝";
-        btnNotes.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const text = item.notes
-            ? item.notes.replace(/\n/g, "<br>")
-            : "<i>Keine Notiz vorhanden.</i>";
-          openModal("Notiz – " + item.name, "<p style='font-size:13px;'>" + text + "</p>");
-        });
-
-        // 📷 Foto
-        const btnPhoto = document.createElement("button");
-        btnPhoto.className = "icon-btn";
-        btnPhoto.textContent = "📷";
-        btnPhoto.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (!item.photo) {
-            openModal("Foto – " + item.name, "<p style='font-size:13px;'>Kein Foto hinterlegt.</p>");
-          } else {
-            openModal(
-              "Foto – " + item.name,
-              "<img src='" + item.photo + "' alt='Foto von " + item.name.replace(/'/g, "") + "' />"
-            );
-          }
-        });
-
-        // 🗑️ Löschen
-        const btnDelete = document.createElement("button");
-        btnDelete.className = "icon-btn danger";
-        btnDelete.textContent = "🗑️";
-        btnDelete.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (confirm("Diesen Artikel wirklich löschen?")) {
-            items = items.filter((x) => x.id !== item.id);
-            saveItems();
-            render();
-          }
-        });
-
-        actions.appendChild(btnFlag);
-        actions.appendChild(btnEdit);
-        actions.appendChild(btnNotes);
-        actions.appendChild(btnPhoto);
-        actions.appendChild(btnDelete);
-
-        row.appendChild(main);
-        row.appendChild(actions);
-        listEl.appendChild(row);
-      });
-
-    sumItemsEl.textContent = totalItems.toString();
-    sumQtyEl.textContent = totalQty.toString();
-    sumValueEl.textContent = totalValue.toFixed(2).replace(".", ",") + " €";
-  }
-
-  // ----- Formular füllen -----
-  function fillForm(item) {
-    fieldId.value = item.id;
-    fieldName.value = item.name || "";
-    fieldSku.value = item.sku || "";
-    fieldCondition.value = item.condition || "";
-    fieldSize.value = item.size || "";
-    fieldWhere.value = item.where || "";
-    fieldQty.value = item.qty != null ? item.qty : 1;
-    fieldPrice.value = item.priceUnit != null ? item.priceUnit : "";
-    fieldDate.value = item.date || "";
-    fieldNotes.value = item.notes || "";
-    fieldPhoto.value = "";
-  }
-
-  function resetForm() {
-    fieldId.value = "";
-    fieldName.value = "";
-    fieldSku.value = "";
-    fieldCondition.value = "";
-    fieldSize.value = "";
-    fieldWhere.value = "";
-    fieldQty.value = "1";
-    fieldPrice.value = "";
-    fieldDate.value = "";
-    fieldNotes.value = "";
-    fieldPhoto.value = "";
-  }
-
-  resetBtn.addEventListener("click", () => {
-    resetForm();
-  });
-
-  // ----- Speichern -----
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const nameVal = fieldName.value.trim();
-    if (!nameVal) {
-      alert("Bitte einen Artikelnamen eingeben.");
-      return;
-    }
-
-    let qtyVal = parseInt(fieldQty.value, 10);
-    if (!qtyVal || qtyVal < 1) qtyVal = 1;
-
-    let priceUnit = fieldPrice.value ? parseFloat(fieldPrice.value) : null;
-    if (priceUnit != null && priceUnit < 0) priceUnit = null;
-
-    let totalPrice = null;
-    if (priceUnit != null) {
-      totalPrice = qtyVal * priceUnit;
-    }
-
-    // Foto einlesen, falls neues ausgewählt
-    let photoData = null;
-    if (fieldPhoto.files && fieldPhoto.files[0]) {
-      photoData = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(fieldPhoto.files[0]);
-      });
-    }
-
-    const existingId = fieldId.value || null;
-    const index = existingId ? items.findIndex((it) => it.id === existingId) : -1;
-
-    const id = existingId || genId();
-    const oldItem = index >= 0 ? items[index] : null;
-
-    const item = {
-      id,
-      name: nameVal,
-      sku: fieldSku.value.trim(),
-      condition: fieldCondition.value,
-      size: fieldSize.value.trim(),
-      where: fieldWhere.value.trim(),
-      qty: qtyVal,
-      priceUnit: priceUnit,
-      totalPrice: totalPrice,
-      date: fieldDate.value || "",
-      notes: fieldNotes.value.trim(),
-      flagged: oldItem ? !!oldItem.flagged : false,
-      photo: photoData !== null ? photoData : (oldItem ? oldItem.photo : null),
-      createdAt: oldItem && oldItem.createdAt ? oldItem.createdAt : new Date().toISOString()
-    };
-
-    if (index >= 0) {
-      items[index] = item;
-    } else {
-      items.push(item);
-    }
-
-    saveItems();
-    resetForm();
-    render();
-  });
-
-  // ----- Suche -----
-  searchInput.addEventListener("input", () => {
-    render();
-  });
-
-  // ----- Init -----
-  items = loadItems();
-  render();
-
-  // ----- PWA Service Worker -----
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch((err) => {
-        console.log("Service Worker Fehler:", err);
-      });
-    });
-  }
-</script>
+  </script>
 </body>
 </html>
