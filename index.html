@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lager App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#2f7d32">
+
+  <!-- iOS PWA Support -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --bg-elevated: #ffffff;
+      --border: #d0d3dc;
+      --accent: #2f7d32;
+      --accent-soft: #e1f4e7;
+      --text: #222;
+      --text-muted: #666;
+      --danger: #c0392b;
+      --radius: 8px;
+      --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Darkmode (automatisch nach System) */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b;
+        --bg-elevated: #1f2228;
+        --border: #343843;
+        --accent: #4caf50;
+        --accent-soft: #21452a;
+        --text: #f5f5f5;
+        --text-muted: #aaaaaa;
+        --danger: #e57373;
+        --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.8rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    main {
+      padding: 0.75rem;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .controls,
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.icon-btn {
+      padding: 0.25rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      min-width: 0;
+    }
+
+    button.icon-btn[disabled] {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .import-label {
+      padding: 0.35rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      background: var(--bg-elevated);
+    }
+
+    input[type="search"],
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.45rem;
+      background: var(--bg-elevated);
+      color: var(--text);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .filters input[type="search"] {
+      flex: 1;
+    }
+
+    .table-wrapper {
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      overflow: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    .data-table thead {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr:nth-child(odd) {
+      background: rgba(0, 0, 0, 0.01);
+    }
+
+    .badge-low {
+      background: rgba(255, 193, 7, 0.12);
+      color: #f2b632;
+      padding: 0.05rem 0.35rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+    }
+
+    .text-muted {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    dialog {
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.9rem;
+      background: var(--bg-elevated);
+      color: var(--text);
+      box-shadow: var(--shadow-soft);
+      max-width: 520px;
+      width: 95%;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .form-grid label {
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .checkbox {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .dialog-menu {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+
+    .dialog-photo-content img {
+      max-width: 90vw;
+      max-height: 70vh;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .dialog-note-content pre {
+      white-space: pre-wrap;
+      font-family: inherit;
+      background: rgba(0, 0, 0, 0.04);
+      padding: 0.6rem;
+      border-radius: var(--radius);
+      max-height: 60vh;
+      overflow: auto;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 800px) {
+      .controls,
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .table-wrapper {
+        border-radius: var(--radius);
+        overflow-x: auto;
+      }
+
+      .data-table {
+        min-width: 600px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="app-header">
+    <h1>Lager App</h1>
+  </header>
+
+  <main>
+    <section class="controls">
+      <button id="btn-add-item" class="primary">+ Artikel</button>
+      <button id="btn-export">Export (JSON)</button>
+      <label class="import-label">
+        Import
+        <input type="file" id="input-import" hidden accept="application/json">
+      </label>
+    </section>
+
+    <section class="filters">
+      <input id="search" type="search" placeholder="Suche nach Name, Nummer, Zustand, Notiz …">
+      <select id="filter-flag">
+        <option value="all">Alle</option>
+        <option value="flagged">Markierte</option>
+        <option value="low">Niedriger Bestand</option>
+      </select>
+    </section>
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>★</th>
+            <th>Artikelname</th>
+            <th>Artikelnr.</th>
+            <th>Zustand</th>
+            <th>Größe</th>
+            <th>Wo gekauft</th>
+            <th>Menge</th>
+            <th>€/Stk</th>
+            <th>Kaufdatum</th>
+            <th>Foto</th>
+            <th>Notiz</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Artikel-Dialog -->
+  <dialog id="item-dialog">
+    <form id="item-form" method="dialog" class="form-grid">
+      <h3 id="dialog-title">Artikel</h3>
+
+      <label>
+        Artikelname
+        <input id="item-name" required>
+      </label>
+
+      <label>
+        Artikelnummer
+        <input id="item-number">
+      </label>
+
+      <label>
+        Zustand
+        <select id="item-condition">
+          <option value="">– bitte wählen –</option>
+          <option value="Neu">Neu</option>
+          <option value="Wie neu">Wie neu</option>
+          <option value="Gebraucht">Gebraucht</option>
+        </select>
+      </label>
+
+      <label>
+        Größe
+        <input id="item-size">
+      </label>
+
+      <label>
+        Wo gekauft
+        <input id="item-store">
+      </label>
+
+      <label>
+        Menge
+        <input id="item-quantity" type="number" min="0" value="0">
+      </label>
+
+      <label>
+        Einkaufspreis pro Stück (€)
+        <input id="item-unit-price" type="number" min="0" step="0.01" value="0">
+      </label>
+
+      <label>
+        Kaufdatum
+        <input id="item-date" type="date">
+      </label>
+
+      <label class="full-width">
+        Notiz
+        <textarea id="item-note" rows="3"></textarea>
+      </label>
+
+      <label>
+        Foto
+        <input id="item-photo" type="file" accept="image/*">
+        <small id="item-photo-info" class="hint">Kein Foto ausgewählt</small>
+      </label>
+
+      <label class="checkbox">
+        <input id="item-flagged" type="checkbox">
+        Artikel markieren
+      </label>
+
+      <menu class="dialog-menu">
+        <button value="cancel">Abbrechen</button>
+        <button value="save" class="primary">Speichern</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Foto-Dialog -->
+  <dialog id="photo-dialog">
+    <div class="dialog-photo-content">
+      <img id="photo-dialog-img" alt="Artikel-Foto">
+      <menu class="dialog-menu">
+        <button id="photo-dialog-close" class="primary">Schließen</button>
+      </menu>
+    </div>
+  </dialog>
+
+  <!-- Notiz-Dialog -->
+  <dialog id="note-dialog">
+    <div class="dialog-note-content">
+      <h3>Notiz</h3>
+      <pre id="note-dialog-text"></pre>
+      <menu class="dialog-menu">
+        <button id="note-dialog-close" class="primary">Schließen</button>
+      </menu>
+    </div>
+  </dialog>
+
+  <script>
+    // ---------- Storage & Export/Import ----------
+
+    const STORAGE_KEY = "lager-app-data-v2";
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveData(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function exportJson(list) {
+      const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lager-backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            resolve(JSON.parse(r.result));
+          } catch (e) {
+            reject(e);
+          }
+        };
+        r.onerror = reject;
+        r.readAsText(file);
+      });
+    }
+
+    // ---------- App-Logik ----------
+
+    let items = loadData() || [];
+    let currentId = null;
+    let tempPhotoDataUrl = null;
+
+    const body = document.getElementById("inventory-body");
+    const dialog = document.getElementById("item-dialog");
+    const photoDialog = document.getElementById("photo-dialog");
+    const noteDialog = document.getElementById("note-dialog");
+
+    const photoDialogImg = document.getElementById("photo-dialog-img");
+    const noteDialogText = document.getElementById("note-dialog-text");
+
+    document.getElementById("photo-dialog-close").onclick = () => photoDialog.close();
+    document.getElementById("note-dialog-close").onclick = () => noteDialog.close();
+
+    function render() {
+      body.innerHTML = "";
+
+      const search = document.getElementById("search").value.toLowerCase();
+      const filter = document.getElementById("filter-flag").value;
+
+      const filtered = items.filter((i) => {
+        if (search) {
+          const hay = (
+            (i.name || "") + " " +
+            (i.articleNumber || "") + " " +
+            (i.condition || "") + " " +
+            (i.size || "") + " " +
+            (i.store || "") + " " +
+            (i.note || "")
+          ).toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        if (filter === "flagged" && !i.flagged) return false;
+        if (filter === "low" && Number(i.quantity || 0) > 1) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="12" style="text-align:center;">Keine Artikel</td>';
+        body.appendChild(tr);
+        return;
+      }
+
+      for (const item of filtered) {
+        const tr = document.createElement("tr");
+        const low = Number(item.quantity || 0) <= 1;
+
+        tr.innerHTML = `
+          <td>${item.flagged ? "⭐" : ""}</td>
+          <td>${escapeHtml(item.name || "")}</td>
+          <td>${escapeHtml(item.articleNumber || "")}</td>
+          <td>${escapeHtml(item.condition || "")}</td>
+          <td>${escapeHtml(item.size || "")}</td>
+          <td>${escapeHtml(item.store || "")}</td>
+          <td>
+            ${Number(item.quantity || 0)}
+            ${low ? '<span class="badge-low">niedrig</span>' : ""}
+          </td>
+          <td>${formatPrice(item.unitPrice)}</td>
+          <td>${escapeHtml(item.purchaseDate || "")}</td>
+          <td>
+            ${item.photoDataUrl ? '<span class="text-muted">Foto vorhanden</span>' : '<span class="text-muted">–</span>'}
+          </td>
+          <td>
+            ${item.note ? escapeHtml(shorten(item.note, 25)) : '<span class="text-muted">–</span>'}
+          </td>
+          <td>
+            <div style="display:flex;gap:.2rem;flex-wrap:wrap;">
+              <button class="icon-btn" title="Artikel markieren" data-action="toggle-flag" data-id="${item.id}">⭐</button>
+              <button class="icon-btn" title="Artikel bearbeiten" data-action="edit" data-id="${item.id}">✏️</button>
+              <button class="icon-btn" title="Foto anzeigen" data-action="show-photo" data-id="${item.id}" ${item.photoDataUrl ? "" : "disabled"}>🖼️</button>
+              <button class="icon-btn" title="Notiz anzeigen" data-action="show-note" data-id="${item.id}" ${item.note ? "" : "disabled"}>📝</button>
+            </div>
+          </td>
+        `;
+
+        body.appendChild(tr);
+      }
+    }
+
+    document.getElementById("btn-add-item").onclick = () => openDialog(null);
+
+    body.onclick = (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (!id || !action) return;
+
+      const item = items.find((i) => i.id === id);
+      if (!item) return;
+
+      switch (action) {
+        case "toggle-flag":
+          item.flagged = !item.flagged;
+          saveData(items);
+          render();
+          break;
+        case "edit":
+          openDialog(id);
+          break;
+        case "show-photo":
+          if (item.photoDataUrl) {
+            photoDialogImg.src = item.photoDataUrl;
+            photoDialog.showModal();
+          }
+          break;
+        case "show-note":
+          if (item.note) {
+            noteDialogText.textContent = item.note;
+            noteDialog.showModal();
+          }
+          break;
+      }
+    };
+
+    function openDialog(id) {
+      currentId = id;
+      tempPhotoDataUrl = null;
+
+      const item = id ? items.find((i) => i.id === id) || {} : {};
+
+      setInputValue("item-name", item.name || "");
+      setInputValue("item-number", item.articleNumber || "");
+      setInputValue("item-condition", item.condition || "");
+      setInputValue("item-size", item.size || "");
+      setInputValue("item-store", item.store || "");
+      setInputValue("item-quantity", item.quantity ?? 0);
+      setInputValue("item-unit-price", item.unitPrice ?? 0);
+      setInputValue("item-date", item.purchaseDate || "");
+      setInputValue("item-note", item.note || "");
+      document.getElementById("item-flagged").checked = !!item.flagged;
+
+      const info = document.getElementById("item-photo-info");
+      if (item.photoDataUrl) {
+        info.textContent = "Foto bereits gespeichert (optional neues wählen)";
+      } else {
+        info.textContent = "Kein Foto ausgewählt";
+      }
+      document.getElementById("item-photo").value = "";
+
+      dialog.showModal();
+    }
+
+    dialog.addEventListener("close", () => {
+      if (dialog.returnValue !== "save") return;
+      saveItem();
+    });
+
+    document.getElementById("item-form").addEventListener("submit", (e) => e.preventDefault());
+
+    document.getElementById("item-photo").addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      const info = document.getElementById("item-photo-info");
+      if (!file) {
+        tempPhotoDataUrl = null;
+        info.textContent = "Kein Foto ausgewählt";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        tempPhotoDataUrl = reader.result;
+        info.textContent = "Foto ausgewählt";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function saveItem() {
+      const name = getInputValue("item-name").trim();
+      const articleNumber = getInputValue("item-number").trim();
+      const condition = getInputValue("item-condition").trim();
+      const size = getInputValue("item-size").trim();
+      const store = getInputValue("item-store").trim();
+      const quantity = Number(getInputValue("item-quantity") || 0);
+      const unitPrice = Number(getInputValue("item-unit-price") || 0);
+      const purchaseDate = getInputValue("item-date");
+      const note = getInputValue("item-note").trim();
+      const flagged = document.getElementById("item-flagged").checked;
+
+      let item = currentId ? items.find((i) => i.id === currentId) : null;
+      if (!item) {
+        item = { id: crypto.randomUUID() };
+        items.push(item);
+      }
+
+      item.name = name;
+      item.articleNumber = articleNumber;
+      item.condition = condition;
+      item.size = size;
+      item.store = store;
+      item.quantity = quantity;
+      item.unitPrice = unitPrice;
+      item.purchaseDate = purchaseDate;
+      item.note = note;
+      item.flagged = flagged;
+
+      if (tempPhotoDataUrl) {
+        item.photoDataUrl = tempPhotoDataUrl;
+      } else if (!item.photoDataUrl) {
+        item.photoDataUrl = null;
+      }
+
+      saveData(items);
+      render();
+    }
+
+    document.getElementById("search").oninput = render;
+    document.getElementById("filter-flag").onchange = render;
+
+    document.getElementById("btn-export").onclick = () => exportJson(items);
+
+    document.getElementById("input-import").onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const data = await importJson(file);
+        if (Array.isArray(data)) {
+          items = data;
+          saveData(items);
+          render();
+        } else {
+          alert("Ungültiges Datenformat in JSON.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Ungültige JSON-Datei");
+      } finally {
+        e.target.value = "";
+      }
+    };
+
+    function formatPrice(v) {
+      const num = Number(v || 0);
+      return num.toFixed(2).replace(".", ",") + " €";
+    }
+
+    function shorten(str, max) {
+      if (!str) return "";
+      return str.length > max ? str.slice(0, max - 1) + "…" : str;
+    }
+
+    function getInputValue(id) {
+      return document.getElementById(id).value;
+    }
+
+    function setInputValue(id, value) {
+      document.getElementById(id).value = value;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    render();
+
+    // ---------- Service Worker Registrierung ----------
+
+    if ("serviceWorker" in navigator) {
+      // wichtig: dein File heißt sW.JS (Groß-/Kleinschreibung beachten)
+      navigator.serviceWorker.register("./sW.JS").catch(console.error);
+    }
+  </script>
+</body>
+</html>
