@@ -14,10 +14,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-  <!-- XLSX (Numbers Export) -->
+  <!-- XLSX (Numbers / Inventur) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-  <!-- jsPDF für PDF Inventur -->
+  <!-- jsPDF (Inventur-PDF) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
@@ -26,7 +25,6 @@
       --bg-elevated: #ffffff;
       --border: #d0d3dc;
       --accent: #2f7d32;
-      --accent-soft: #e1f4e7;
       --text: #222;
       --text-muted: #666;
       --radius: 8px;
@@ -39,7 +37,6 @@
         --bg-elevated: #1f242a;
         --border: #343843;
         --accent: #4caf50;
-        --accent-soft: #21452a;
         --text: #f5f5f5;
         --text-muted: #aaaaaa;
       }
@@ -79,7 +76,12 @@
     button.primary {
       background: var(--accent);
       border-color: var(--accent);
-      color: white;
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
 
     .controls {
@@ -103,12 +105,15 @@
       color: var(--text);
     }
 
+    input[type="search"] {
+      flex: 1;
+    }
+
     .table-wrapper {
       background: var(--bg-elevated);
       border-radius: var(--radius);
       box-shadow: var(--shadow-soft);
       overflow: auto;
-      margin-top: 0.5rem;
     }
 
     table {
@@ -120,22 +125,46 @@
     th, td {
       padding: 0.15rem 0.25rem;
       border-bottom: 1px solid var(--border);
-      font-size: 0.5rem; /* Sehr klein */
+      font-size: 0.5rem; /* sehr klein */
     }
 
     th {
       background: rgba(0,0,0,0.05);
+      text-align: left;
     }
 
-    /* MENGENFELD – extra schmal */
+    .badge-low {
+      background: rgba(255,193,7,0.15);
+      color: #f2b632;
+      padding: 0.05rem 0.25rem;
+      border-radius: 999px;
+      font-size: 0.45rem;
+      margin-left: 0.1rem;
+    }
+
+    .text-muted {
+      color: var(--text-muted);
+      font-size: 0.45rem;
+    }
+
+    /* Mengenfeld – sehr schmal, optisch 3-stellig */
     .qty-input {
-      width: 38px !important;
-      padding: 0.05rem !important;
-      font-size: 0.5rem !important;
+      width: 38px;
+      padding: 0.05rem;
+      font-size: 0.5rem;
       text-align: center;
     }
 
     @media (max-width: 800px) {
+      .controls, .filters {
+        flex-direction: column;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      /* Größe, Shop, Foto, Notiz ausblenden */
       th:nth-child(5), td:nth-child(5),
       th:nth-child(6), td:nth-child(6),
       th:nth-child(10), td:nth-child(10),
@@ -163,6 +192,17 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 0.7rem;
+    }
+
+    .form-grid label {
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
     }
 
     .dialog-menu {
@@ -220,20 +260,20 @@
     <div class="table-wrapper">
       <table>
         <thead>
-          <tr>
-            <th>★</th>
-            <th>Name</th>
-            <th>Nr.</th>
-            <th>Zustand</th>
-            <th>Größe</th>
-            <th>Shop</th>
-            <th>Menge</th>
-            <th>€/Stk</th>
-            <th>Datum</th>
-            <th>Foto</th>
-            <th>Notiz</th>
-            <th>Aktion</th>
-          </tr>
+        <tr>
+          <th>★</th>
+          <th>Name</th>
+          <th>Nr.</th>
+          <th>Zustand</th>
+          <th>Größe</th>
+          <th>Shop</th>
+          <th>Menge</th>
+          <th>€/Stk</th>
+          <th>Datum</th>
+          <th>Foto</th>
+          <th>Notiz</th>
+          <th>Aktion</th>
+        </tr>
         </thead>
         <tbody id="inventory-body"></tbody>
       </table>
@@ -242,9 +282,13 @@
     <!-- Dialog Artikel -->
     <dialog id="item-dialog">
       <form id="item-form" class="form-grid" onsubmit="return false;">
+        <label>Artikelname
+          <input id="item-name" required>
+        </label>
 
-        <label>Artikelname <input id="item-name" required></label>
-        <label>Artikelnummer <input id="item-number"></label>
+        <label>Artikelnummer
+          <input id="item-number">
+        </label>
 
         <label>Zustand
           <select id="item-condition">
@@ -255,24 +299,31 @@
           </select>
         </label>
 
-        <label>Größe <input id="item-size"></label>
-        <label>Wo gekauft <input id="item-store"></label>
+        <label>Größe
+          <input id="item-size">
+        </label>
 
-        <label>Menge <input id="item-quantity" type="number" min="0" value="0"></label>
+        <label>Wo gekauft
+          <input id="item-store">
+        </label>
+
+        <label>Menge
+          <input id="item-quantity" type="number" min="0" value="0">
+        </label>
 
         <label>Preis pro Stück (€)
           <input id="item-unit-price" type="number" min="0" step="0.01" value="0">
         </label>
 
-        <label>Kaufdatum <input id="item-date" type="date"></label>
+        <label>Kaufdatum
+          <input id="item-date" type="date">
+        </label>
 
-        <label class="full-width">
-          Notiz
+        <label class="full-width">Notiz
           <textarea id="item-note" rows="3"></textarea>
         </label>
 
-        <label>
-          Foto
+        <label>Foto
           <input id="item-photo" type="file" accept="image/*">
           <small id="item-photo-info">Kein Foto ausgewählt</small>
         </label>
@@ -283,33 +334,37 @@
         </label>
 
         <menu class="dialog-menu">
-          <button type="button" onclick="cancelItem()">Abbrechen</button>
-          <button class="primary" type="button" onclick="saveItem()">Speichern</button>
+          <button type="button" id="btn-item-cancel">Abbrechen</button>
+          <button type="button" id="btn-item-save" class="primary">Speichern</button>
         </menu>
       </form>
     </dialog>
 
-    <!-- Foto Dialog -->
+    <!-- Foto-Dialog -->
     <dialog id="photo-dialog">
       <div class="dialog-photo-content">
-        <img id="photo-dialog-img">
+        <img id="photo-dialog-img" alt="Artikel-Foto">
         <menu class="dialog-menu">
-          <button onclick="openPhotoNewTab()" class="primary">Bild öffnen (iPhone Speichern)</button>
-          <button onclick="photoDialog.close()" class="primary">Schließen</button>
+          <button type="button" id="btn-photo-open" class="primary">Bild öffnen (iPhone speichern)</button>
+          <button type="button" id="btn-photo-close" class="primary">Schließen</button>
         </menu>
       </div>
     </dialog>
 
-    <!-- Notiz Dialog -->
+    <!-- Notiz-Dialog -->
     <dialog id="note-dialog">
       <h3>Notiz</h3>
       <pre id="note-dialog-text" style="white-space:pre-wrap;"></pre>
       <menu class="dialog-menu">
-        <button onclick="noteDialog.close()" class="primary">Schließen</button>
+        <button type="button" id="btn-note-close" class="primary">Schließen</button>
       </menu>
     </dialog>
-        <script>
-      const STORAGE_KEY = "lager-app-data-v6";
+
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const STORAGE_KEY = "lager-app-data-v7";
 
       let items = loadData() || [];
       let currentId = null;
@@ -317,18 +372,27 @@
 
       const tbody = document.getElementById("inventory-body");
       const itemDialog = document.getElementById("item-dialog");
-      window.photoDialog = document.getElementById("photo-dialog");
-      window.noteDialog = document.getElementById("note-dialog");
+      const photoDialog = document.getElementById("photo-dialog");
+      const noteDialog = document.getElementById("note-dialog");
       const photoDialogImg = document.getElementById("photo-dialog-img");
       const noteDialogText = document.getElementById("note-dialog-text");
 
       // Buttons
-      document.getElementById("btn-add-item").onclick = () => openItemDialog(null);
-      document.getElementById("btn-export-json").onclick = () => exportJson(items);
-      document.getElementById("btn-inventur-xlsx").onclick = () => exportInventurXLSX(items);
-      document.getElementById("btn-inventur-pdf").onclick = () => exportInventurPDF(items);
+      document.getElementById("btn-add-item").addEventListener("click", () => openItemDialog(null));
+      document.getElementById("btn-export-json").addEventListener("click", () => exportJson(items));
+      document.getElementById("btn-inventur-xlsx").addEventListener("click", () => exportInventurXLSX(items));
+      document.getElementById("btn-inventur-pdf").addEventListener("click", () => exportInventurPDF(items));
+      document.getElementById("btn-item-cancel").addEventListener("click", () => itemDialog.close());
+      document.getElementById("btn-item-save").addEventListener("click", () => saveItem());
+      document.getElementById("btn-photo-open").addEventListener("click", () => {
+        if (!photoDialogImg.src) return;
+        window.open(photoDialogImg.src, "_blank");
+      });
+      document.getElementById("btn-photo-close").addEventListener("click", () => photoDialog.close());
+      document.getElementById("btn-note-close").addEventListener("click", () => noteDialog.close());
 
-      document.getElementById("input-import").onchange = async (e) => {
+      // Import
+      document.getElementById("input-import").addEventListener("change", async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
@@ -346,14 +410,31 @@
         } finally {
           e.target.value = "";
         }
-      };
+      });
 
       // Filter
-      document.getElementById("search").oninput = () => render();
-      document.getElementById("filter-flag").onchange = () => render();
+      document.getElementById("search").addEventListener("input", render);
+      document.getElementById("filter-flag").addEventListener("change", render);
 
-      // Tabellenevents (Buttons in Zeilen)
-      tbody.onclick = (e) => {
+      // Foto Input
+      document.getElementById("item-photo").addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        const info = document.getElementById("item-photo-info");
+        if (!file) {
+          tempPhotoDataUrl = null;
+          info.textContent = "Kein Foto ausgewählt";
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          tempPhotoDataUrl = reader.result;
+          info.textContent = "Foto ausgewählt";
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Tabellen-Buttons
+      tbody.addEventListener("click", (e) => {
         const btn = e.target.closest("button");
         if (!btn) return;
         const id = btn.dataset.id;
@@ -385,9 +466,9 @@
             }
             break;
         }
-      };
+      });
 
-      // Menge direkt in Tabelle ändern (ohne komplette Neurender)
+      // Mengenfeld direkt ändern
       document.addEventListener("input", (e) => {
         if (!e.target.classList.contains("qty-input")) return;
         const id = e.target.dataset.id;
@@ -400,7 +481,6 @@
         saveData(items);
         updateStats();
 
-        // Badge "niedrig" direkt anpassen
         const td = e.target.closest("td");
         if (!td) return;
         let badge = td.querySelector(".badge-low");
@@ -416,7 +496,7 @@
         }
       });
 
-      // ---------- CRUD & Rendering ----------
+      // ---------- Daten / Rendering ----------
 
       function loadData() {
         try {
@@ -508,7 +588,7 @@
           `Artikel: ${itemCount} · Gesamtmenge: ${totalQty} · Ausgaben: ${totalCost.toFixed(2).replace('.', ',')} €`;
       }
 
-      // ---------- Dialog-Logik ----------
+      // ---------- Dialog ----------
 
       function openItemDialog(id) {
         currentId = id;
@@ -538,26 +618,6 @@
         itemDialog.showModal();
       }
 
-      document.getElementById("item-photo").addEventListener("change", (e) => {
-        const file = e.target.files?.[0];
-        const info = document.getElementById("item-photo-info");
-        if (!file) {
-          tempPhotoDataUrl = null;
-          info.textContent = "Kein Foto ausgewählt";
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          tempPhotoDataUrl = reader.result;
-          info.textContent = "Foto ausgewählt";
-        };
-        reader.readAsDataURL(file);
-      });
-
-      function cancelItem() {
-        itemDialog.close();
-      }
-
       function saveItem() {
         const name = getInputValue("item-name").trim();
         if (!name) {
@@ -577,7 +637,7 @@
 
         let item = currentId ? items.find(i => i.id === currentId) : null;
         if (!item) {
-          item = { id: crypto.randomUUID() };
+          item = { id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) };
           items.push(item);
         }
 
@@ -601,13 +661,6 @@
         saveData(items);
         render();
         itemDialog.close();
-      }
-
-      // ---------- Foto & Notiz ----------
-
-      function openPhotoNewTab() {
-        if (!photoDialogImg.src) return;
-        window.open(photoDialogImg.src, "_blank");
       }
 
       // ---------- JSON Import/Export ----------
@@ -637,11 +690,11 @@
         });
       }
 
-      // ---------- Inventur: XLSX (Numbers) ----------
+      // ---------- Inventur XLSX ----------
 
       function exportInventurXLSX(list) {
         if (!window.XLSX) {
-          alert("XLSX Bibliothek nicht geladen.");
+          alert("XLSX-Bibliothek nicht geladen.");
           return;
         }
 
@@ -692,22 +745,20 @@
         XLSX.writeFile(wb, "Inventur-Lagerbestand.xlsx");
       }
 
-      // ---------- Inventur: PDF ----------
+      // ---------- Inventur PDF ----------
 
       function exportInventurPDF(list) {
         const jspdf = window.jspdf;
         if (!jspdf || !jspdf.jsPDF) {
-          alert("PDF Bibliothek nicht geladen.");
+          alert("PDF-Bibliothek nicht geladen.");
           return;
         }
-
         const { jsPDF } = jspdf;
         const doc = new jsPDF("p", "mm", "a4");
 
         const today = new Date().toLocaleDateString("de-DE");
 
         let y = 15;
-
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
         doc.text("Inventur – Lagerbestand", 10, y);
@@ -745,12 +796,10 @@
           if (y > 270) {
             doc.addPage();
             y = 15;
-
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
             doc.text("Inventur – Lagerbestand (Fortsetzung)", 10, y);
             y += 6;
-
             doc.setFontSize(8);
             doc.text("Name", 10, y);
             doc.text("Nr.", 60, y);
@@ -818,6 +867,7 @@
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("./sw.js").catch(console.error);
       }
-    </script>
+    });
+  </script>
 </body>
 </html>
