@@ -1,12 +1,10 @@
 {
-  "name": "Lager Pro",
-  "short_name": "LagerPro",
-  "start_url": "index.html",
-  "scope": "./",
+  "name": "Lager App",
+  "short_name": "Lager",
+  "start_url": "./Index.html",
   "display": "standalone",
-  "background_color": "#05060a",
-  "theme_color": "#05060a",
-  "description": "Lagerverwaltung für Artikel, Preise, Mengen, Fotos und Notizen.",
+  "theme_color": "#2f7d32",
+  "background_color": "#f4f5f7",
   "icons": [
     {
       "src": "icon-192.png",
