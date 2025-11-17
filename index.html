@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lager App – Testversion</title>
+<title>Lager App</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000">
 
 <style>
   body {
@@ -14,12 +18,14 @@
     padding:1rem;
   }
 
+  h2 { margin:0 0 1rem 0; }
+
   button {
     background:#2ecc71;
     border:none;
-    padding:0.6rem 1rem;
+    padding:0.5rem 1rem;
     border-radius:8px;
-    font-size:1rem;
+    font-size:0.9rem;
     cursor:pointer;
   }
 
@@ -27,11 +33,11 @@
     width:100%;
     margin-top:1rem;
     border-collapse:collapse;
+    font-size:0.65rem; /* kleine Schrift */
   }
   th, td {
     border:1px solid #444;
-    padding:0.4rem;
-    font-size:0.8rem;
+    padding:0.25rem;
   }
 
   dialog {
@@ -40,9 +46,12 @@
     color:#fff;
     padding:1rem;
     border-radius:8px;
+    width:90%;
   }
 
-  input {
+  label { font-size:0.8rem; }
+
+  input, select {
     width:100%;
     padding:0.4rem;
     margin-bottom:0.6rem;
@@ -56,22 +65,53 @@
 
 <body>
 
-<h2>Lager App – Minimaltest</h2>
+<h2>Lager App</h2>
 <button id="btnAdd">+ Artikel</button>
 
+<!-- Dialog -->
 <dialog id="dlg">
   <h3>Artikel anlegen</h3>
-  <input id="name" placeholder="Artikelname">
-  <input id="number" placeholder="Artikelnummer">
+
+  <label>Artikelnummer</label>
+  <input id="nr">
+
+  <label>Kaufdatum</label>
+  <input id="date" type="date">
+
+  <label>Artikelname</label>
+  <input id="name">
+
+  <label>Zustand</label>
+  <select id="condition">
+    <option value="Neu">Neu</option>
+    <option value="Wie neu">Wie neu</option>
+    <option value="Gebraucht">Gebraucht</option>
+  </select>
+
+  <label>Wo gekauft</label>
+  <input id="store">
+
+  <label>Einkaufspreis (€)</label>
+  <input id="price" type="number" step="0.01">
+
+  <label>Foto</label>
+  <input id="photo" type="file" accept="image/*">
+
   <button id="saveBtn">Speichern</button>
   <button onclick="dlg.close()">Abbrechen</button>
 </dialog>
 
+<!-- Tabelle -->
 <table>
   <thead>
     <tr>
+      <th>Nr</th>
+      <th>Datum</th>
       <th>Name</th>
-      <th>Nummer</th>
+      <th>Zustand</th>
+      <th>Shop</th>
+      <th>Preis</th>
+      <th>Foto</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
@@ -79,7 +119,6 @@
 
 <script>
 let items = [];
-
 const dlg = document.getElementById("dlg");
 
 document.getElementById("btnAdd").onclick = () => {
@@ -87,21 +126,51 @@ document.getElementById("btnAdd").onclick = () => {
 };
 
 document.getElementById("saveBtn").onclick = () => {
+
+  const nr   = document.getElementById("nr").value.trim();
+  const date = document.getElementById("date").value.trim();
   const name = document.getElementById("name").value.trim();
-  const nr = document.getElementById("number").value.trim();
+  const cond = document.getElementById("condition").value;
+  const shop = document.getElementById("store").value.trim();
+  const price = document.getElementById("price").value.trim();
 
-  if (!name) { alert("Bitte Name eingeben"); return; }
+  // --- Foto als Base64 ---
+  const file = document.getElementById("photo").files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      items.push({nr, date, name, cond, shop, price, photo: reader.result});
+      render();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    items.push({nr, date, name, cond, shop, price, photo: null});
+    render();
+  }
 
-  items.push({name, nr});
-  render();
   dlg.close();
 };
 
 function render() {
   const tb = document.getElementById("tbody");
-  tb.innerHTML = items.map(i => 
-    `<tr><td>${i.name}</td><td>${i.nr}</td></tr>`
-  ).join("");
+  tb.innerHTML = items.map(i => `
+    <tr>
+      <td>${i.nr}</td>
+      <td>${i.date}</td>
+      <td>${i.name}</td>
+      <td>${i.cond}</td>
+      <td>${i.shop}</td>
+      <td>${i.price}</td>
+      <td>${i.photo ? "📷" : "-"}</td>
+    </tr>
+  `).join("");
+}
+</script>
+
+<!-- Service Worker Registrieren -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
 </script>
 
