@@ -1,849 +1,109 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>Lager App – PWA Inventur</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lager App – Testversion</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0f1115">
-  <!-- iOS Homescreen -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  body {
+    background:#000;
+    color:#fff;
+    font-family: system-ui;
+    margin:0;
+    padding:1rem;
+  }
 
-  <!-- jsPDF für Inventur-PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  button {
+    background:#2ecc71;
+    border:none;
+    padding:0.6rem 1rem;
+    border-radius:8px;
+    font-size:1rem;
+    cursor:pointer;
+  }
 
-  <style>
-    :root {
-      --bg: #0f1115;
-      --bg-elevated: #181b22;
-      --border: #2a2f3b;
-      --accent: #39c26b;
-      --accent-soft: rgba(57,194,107,0.15);
-      --danger: #e74c3c;
-      --text: #f5f5f7;
-      --text-muted: #9aa0b5;
-      --radius: 8px;
-      --shadow-soft: 0 2px 10px rgba(0,0,0,0.7);
-    }
+  table {
+    width:100%;
+    margin-top:1rem;
+    border-collapse:collapse;
+  }
+  th, td {
+    border:1px solid #444;
+    padding:0.4rem;
+    font-size:0.8rem;
+  }
 
-    * { box-sizing: border-box; }
+  dialog {
+    background:#111;
+    border:1px solid #444;
+    color:#fff;
+    padding:1rem;
+    border-radius:8px;
+  }
 
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #1c2230 0, #05060a 50%);
-      color: var(--text);
-    }
-
-    .app-header {
-      background: #10131a;
-      border-bottom: 1px solid #1f2430;
-      padding: 0.9rem 1rem;
-      text-align: center;
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    main {
-      padding: 0.7rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    /* STATISTIK */
-    #stats {
-      background: var(--bg-elevated);
-      border-radius: var(--radius);
-      padding: 0.5rem 0.7rem;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-soft);
-      font-size: 0.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 0.7rem;
-    }
-
-    #stats span { color: var(--text-muted); }
-    #stats b { color: var(--text); font-weight: 600; }
-
-    .controls, .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 0.6rem;
-    }
-
-    button {
-      cursor: pointer;
-      padding: 0.35rem 0.8rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #141922;
-      color: var(--text);
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    button.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #041208;
-      font-weight: 600;
-    }
-
-    button.danger {
-      border-color: var(--danger);
-      color: var(--danger);
-    }
-
-    button:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    label.btn-like {
-      padding: 0.35rem 0.8rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #141922;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      cursor: pointer;
-    }
-
-    label.btn-like input { display: none; }
-
-    input, select, textarea {
-      padding: 0.35rem 0.4rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #0e1118;
-      color: var(--text);
-      font-size: 0.8rem;
-      outline: none;
-    }
-
-    input[type="search"] { flex: 1; }
-    input::placeholder { color: var(--text-muted); }
-
-    .table-wrapper {
-      background: var(--bg-elevated);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-soft);
-      overflow: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-
-    th, td {
-      padding: 0.12rem 0.25rem;
-      border-bottom: 1px solid #222735;
-      font-size: 0.48rem;
-      white-space: nowrap;
-    }
-
-    th {
-      background: #1b202c;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      font-weight: 500;
-      color: var(--text-muted);
-      text-align: left;
-    }
-
-    tbody tr:nth-child(even) { background: #141822; }
-    tbody tr:nth-child(odd) { background: #11141c; }
-    tbody tr.flagged { background: rgba(57,194,107,0.08); }
-
-    .text-muted { color: var(--text-muted); }
-
-    .qty-input {
-      width: 38px;
-      padding: 0.05rem;
-      font-size: 0.5rem;
-      text-align: center;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #05070f;
-      color: var(--text);
-    }
-
-    .badge-low {
-      background: var(--accent-soft);
-      color: var(--accent);
-      padding: 0.05rem 0.25rem;
-      border-radius: 999px;
-      font-size: 0.42rem;
-      margin-left: 0.1rem;
-    }
-
-    .icon-btn {
-      border-radius: 999px;
-      padding: 0.12rem 0.28rem;
-      font-size: 0.6rem;
-      border: 1px solid var(--border);
-      background: #10141d;
-      min-width: 0;
-    }
-
-    .icon-btn.danger {
-      border-color: var(--danger);
-      color: var(--danger);
-    }
-
-    .actions-cell {
-      display: flex;
-      gap: 0.15rem;
-      flex-wrap: nowrap;
-    }
-
-    @media (max-width: 800px) {
-      .controls, .filters { flex-direction: column; }
-      table { min-width: 0; }
-
-      /* auf kleineren Screens manche Spalten ausblenden */
-      th:nth-child(5), td:nth-child(5), /* Wo gekauft */
-      th:nth-child(6), td:nth-child(6), /* Menge */
-      th:nth-child(9), td:nth-child(9)  /* Foto */
-      { display: none; }
-    }
-
-    dialog {
-      padding: 0.9rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: #10141d;
-      color: var(--text);
-      box-shadow: var(--shadow-soft);
-      max-width: 420px;
-      width: 95%;
-    }
-
-    dialog::backdrop { background: rgba(0,0,0,0.7); }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0.6rem;
-    }
-
-    .form-grid label {
-      font-size: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .form-grid input, .form-grid select { border-radius: 6px; }
-    .form-grid textarea {
-      border-radius: 6px;
-      resize: vertical;
-      min-height: 3rem;
-      font-size: 0.8rem;
-    }
-
-    .full-width { grid-column: 1 / -1; }
-
-    .dialog-menu {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 0.7rem;
-    }
-
-    .dialog-photo-content img {
-      max-width: 90vw;
-      max-height: 70vh;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      display: block;
-    }
-
-    .small-hint {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-    }
-  </style>
+  input {
+    width:100%;
+    padding:0.4rem;
+    margin-bottom:0.6rem;
+    border-radius:6px;
+    border:1px solid #555;
+    background:#222;
+    color:#fff;
+  }
+</style>
 </head>
 
 <body>
-  <header class="app-header">
-    Lager App – Inventur (PWA Dark)
-  </header>
 
-  <main>
-    <!-- STATISTIK -->
-    <div id="stats">
-      <span>Artikel-Arten: <b id="stat-count">0</b></span>
-      <span>Artikel gesamt: <b id="stat-qty">0</b></span>
-      <span>Gesamt-Einkaufspreis: <b id="stat-total">0,00 €</b></span>
-    </div>
+<h2>Lager App – Minimaltest</h2>
+<button id="btnAdd">+ Artikel</button>
+
+<dialog id="dlg">
+  <h3>Artikel anlegen</h3>
+  <input id="name" placeholder="Artikelname">
+  <input id="number" placeholder="Artikelnummer">
+  <button id="saveBtn">Speichern</button>
+  <button onclick="dlg.close()">Abbrechen</button>
+</dialog>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Nummer</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<script>
+let items = [];
+
+const dlg = document.getElementById("dlg");
+
+document.getElementById("btnAdd").onclick = () => {
+  dlg.showModal();
+};
+
+document.getElementById("saveBtn").onclick = () => {
+  const name = document.getElementById("name").value.trim();
+  const nr = document.getElementById("number").value.trim();
+
+  if (!name) { alert("Bitte Name eingeben"); return; }
+
+  items.push({name, nr});
+  render();
+  dlg.close();
+};
+
+function render() {
+  const tb = document.getElementById("tbody");
+  tb.innerHTML = items.map(i => 
+    `<tr><td>${i.name}</td><td>${i.nr}</td></tr>`
+  ).join("");
+}
+</script>
 
-    <!-- BUTTONS -->
-    <section class="controls">
-      <button class="primary" id="btn-add-item">+ Artikel</button>
-
-      <label class="btn-like">
-        Backup importieren (JSON)
-        <input type="file" id="input-import" accept="application/json">
-      </label>
-
-      <button id="btn-export-json">Backup exportieren (JSON)</button>
-      <button id="btn-export-pdf">Inventurliste (PDF)</button>
-    </section>
-
-    <!-- FILTER -->
-    <section class="filters">
-      <input id="search" type="search" placeholder="Suche nach Name, Nummer, Zustand, Shop …">
-      <select id="filter-flag">
-        <option value="all">Alle</option>
-        <option value="flagged">Markierte</option>
-      </select>
-    </section>
-
-    <!-- TABELLE -->
-    <div class="table-wrapper">
-      <table>
-        <thead>
-        <tr>
-          <th>★</th>
-          <th>Art.-Nr.</th>
-          <th>Name</th>
-          <th>Zustand</th>
-          <th>Wo gekauft</th>
-          <th>Menge</th>
-          <th>Preis (€)</th>
-          <th>Gesamt (€)</th>
-          <th>Kaufdatum</th>
-          <th>Foto</th>
-          <th>Aktion</th>
-        </tr>
-        </thead>
-        <tbody id="inventory-body"></tbody>
-      </table>
-    </div>
-
-    <!-- ARTIKEL-POPUP -->
-    <dialog id="item-dialog">
-      <form id="item-form" class="form-grid" onsubmit="return false;">
-        <label class="full-width">
-          Artikelname
-          <input id="item-name" required>
-        </label>
-
-        <label>
-          Artikelnummer
-          <input id="item-number">
-        </label>
-
-        <label>
-          Kaufdatum
-          <input id="item-date" type="date">
-        </label>
-
-        <label>
-          Zustand
-          <select id="item-condition">
-            <option value="">– bitte wählen –</option>
-            <option value="Neu">Neu</option>
-            <option value="Wie neu">Wie neu</option>
-            <option value="Gebraucht">Gebraucht</option>
-          </select>
-        </label>
-
-        <label>
-          Wo gekauft
-          <input id="item-store">
-        </label>
-
-        <label>
-          Menge
-          <input id="item-quantity" type="number" min="0" value="1">
-        </label>
-
-        <label>
-          Einkaufspreis pro Stück (€)
-          <input id="item-price" type="number" step="0.01" min="0" value="0">
-        </label>
-
-        <label class="full-width">
-          Foto
-          <input id="item-photo" type="file" accept="image/*">
-          <span id="item-photo-info" class="small-hint">Kein Foto ausgewählt</span>
-        </label>
-
-        <label style="display:flex;align-items:center;gap:0.3rem;">
-          <input id="item-flagged" type="checkbox">
-          <span class="small-hint">Artikel markieren</span>
-        </label>
-
-        <div class="dialog-menu full-width">
-          <button type="button" id="btn-item-cancel">Abbrechen</button>
-          <button type="button" class="primary" id="btn-item-save">Speichern</button>
-        </div>
-      </form>
-    </dialog>
-
-    <!-- FOTO-POPUP -->
-    <dialog id="photo-dialog">
-      <div class="dialog-photo-content">
-        <img id="photo-dialog-img" alt="Artikel-Foto">
-        <div class="dialog-menu">
-          <button type="button" id="btn-photo-open" class="primary">Bild öffnen (Speichern möglich)</button>
-          <button type="button" id="btn-photo-close" class="primary">Schließen</button>
-        </div>
-      </div>
-    </dialog>
-  </main>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const STORAGE_KEY = "lager-pwa-dark-v1";
-
-      let items = loadData();
-      let currentId = null;
-      let tempPhotoDataUrl = null;
-
-      const tbody = document.getElementById("inventory-body");
-      const statsCount = document.getElementById("stat-count");
-      const statsQty = document.getElementById("stat-qty");
-      const statsTotal = document.getElementById("stat-total");
-
-      const itemDialog = document.getElementById("item-dialog");
-      const itemForm = document.getElementById("item-form");
-      const photoDialog = document.getElementById("photo-dialog");
-      const photoDialogImg = document.getElementById("photo-dialog-img");
-
-      // Buttons
-      document.getElementById("btn-add-item").addEventListener("click", () => openItemDialog(null));
-      document.getElementById("btn-item-cancel").addEventListener("click", () => itemDialog.close());
-      document.getElementById("btn-item-save").addEventListener("click", () => saveItem());
-      document.getElementById("btn-photo-close").addEventListener("click", () => photoDialog.close());
-      document.getElementById("btn-photo-open").addEventListener("click", () => {
-        if (!photoDialogImg.src) return;
-        window.open(photoDialogImg.src, "_blank");
-      });
-
-      document.getElementById("btn-export-json").addEventListener("click", () => exportJson(items));
-      document.getElementById("btn-export-pdf").addEventListener("click", () => exportPdf(items));
-
-      document.getElementById("search").addEventListener("input", render);
-      document.getElementById("filter-flag").addEventListener("change", render);
-
-      document.getElementById("input-import").addEventListener("change", async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        try {
-          const data = await importJson(file);
-          if (Array.isArray(data)) {
-            items = data;
-            saveData(items);
-            render();
-            alert("Backup importiert.");
-          } else {
-            alert("Ungültiges JSON-Format.");
-          }
-        } catch (err) {
-          console.error(err);
-          alert("Fehler beim Import.");
-        } finally {
-          e.target.value = "";
-        }
-      });
-
-      document.getElementById("item-photo").addEventListener("change", (e) => {
-        const file = e.target.files?.[0];
-        const info = document.getElementById("item-photo-info");
-        if (!file) {
-          tempPhotoDataUrl = null;
-          info.textContent = "Kein Foto ausgewählt";
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          tempPhotoDataUrl = reader.result;
-          info.textContent = "Foto ausgewählt";
-        };
-        reader.readAsDataURL(file);
-      });
-
-      // Tabellen-Buttons
-      tbody.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
-        if (!id || !action) return;
-
-        const item = items.find(i => i.id === id);
-        if (!item) return;
-
-        switch (action) {
-          case "flag":
-            item.flagged = !item.flagged;
-            saveData(items);
-            render();
-            break;
-          case "edit":
-            openItemDialog(id);
-            break;
-          case "photo":
-            if (item.photoDataUrl) {
-              photoDialogImg.src = item.photoDataUrl;
-              photoDialog.showModal();
-            }
-            break;
-          case "delete":
-            if (confirm("Diesen Artikel wirklich löschen?")) {
-              items = items.filter(i => i.id !== id);
-              saveData(items);
-              render();
-            }
-            break;
-        }
-      });
-
-      // Menge direkt in Tabelle änderbar
-      document.addEventListener("input", (e) => {
-        if (!e.target.classList.contains("qty-input")) return;
-        const id = e.target.dataset.id;
-        const value = Number(e.target.value);
-        const item = items.find(i => i.id === id);
-        if (!item) return;
-
-        item.quantity = isNaN(value) ? 0 : value;
-        saveData(items);
-        render();
-      });
-
-      // Daten laden / speichern
-      function loadData() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          return raw ? JSON.parse(raw) : [];
-        } catch {
-          return [];
-        }
-      }
-
-      function saveData(list) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-      }
-
-      // Dialog
-      function openItemDialog(id) {
-        currentId = id;
-        tempPhotoDataUrl = null;
-        itemForm.reset();
-        document.getElementById("item-photo-info").textContent = "Kein Foto ausgewählt";
-        document.getElementById("item-flagged")?.checked && (document.getElementById("item-flagged").checked = false);
-
-        if (id) {
-          const item = items.find(i => i.id === id);
-          if (item) {
-            setValue("item-name", item.name);
-            setValue("item-number", item.articleNumber);
-            setValue("item-date", item.purchaseDate);
-            setValue("item-condition", item.condition);
-            setValue("item-store", item.store);
-            setValue("item-quantity", item.quantity ?? 0);
-            setValue("item-price", item.price ?? 0);
-            const flaggedEl = document.getElementById("item-flagged");
-            if (flaggedEl) flaggedEl.checked = !!item.flagged;
-            if (item.photoDataUrl) {
-              document.getElementById("item-photo-info").textContent = "Foto gespeichert (optional neues wählen)";
-            }
-          }
-        }
-
-        itemDialog.showModal();
-      }
-
-      function saveItem() {
-        const name = getValue("item-name").trim();
-        if (!name) {
-          alert("Bitte einen Artikelnamen eingeben.");
-          return;
-        }
-
-        const articleNumber = getValue("item-number").trim();
-        const purchaseDate = getValue("item-date");
-        const condition = getValue("item-condition");
-        const store = getValue("item-store").trim();
-        const quantity = Number(getValue("item-quantity") || 0);
-        const price = Number(getValue("item-price") || 0);
-        const flagged = document.getElementById("item-flagged")?.checked || false;
-
-        let item = currentId ? items.find(i => i.id === currentId) : null;
-        if (!item) {
-          item = { id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) };
-          items.push(item);
-        }
-
-        item.name = name;
-        item.articleNumber = articleNumber;
-        item.purchaseDate = purchaseDate;
-        item.condition = condition;
-        item.store = store;
-        item.quantity = quantity;
-        item.price = price;
-        item.flagged = flagged;
-
-        if (tempPhotoDataUrl) {
-          item.photoDataUrl = tempPhotoDataUrl;
-        }
-
-        saveData(items);
-        render();
-        itemDialog.close();
-      }
-
-      // Rendering
-      function render() {
-        tbody.innerHTML = "";
-
-        const search = document.getElementById("search").value.toLowerCase();
-        const filterFlag = document.getElementById("filter-flag").value;
-
-        const filtered = items.filter(i => {
-          if (filterFlag === "flagged" && !i.flagged) return false;
-          if (search) {
-            const hay = (
-              (i.name || "") + " " +
-              (i.articleNumber || "") + " " +
-              (i.condition || "") + " " +
-              (i.store || "")
-            ).toLowerCase();
-            if (!hay.includes(search)) return false;
-          }
-          return true;
-        });
-
-        if (!filtered.length) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = '<td colspan="11" style="text-align:center;padding:0.4rem;font-size:0.6rem;">Keine Artikel</td>';
-          tbody.appendChild(tr);
-          updateStats();
-          return;
-        }
-
-        for (const item of filtered) {
-          const tr = document.createElement("tr");
-          if (item.flagged) tr.classList.add("flagged");
-
-          const qty = Number(item.quantity || 0);
-          const price = Number(item.price || 0);
-          const total = qty * price;
-
-          tr.innerHTML = `
-            <td>${item.flagged ? "⭐" : ""}</td>
-            <td>${escapeHtml(item.articleNumber || "")}</td>
-            <td>${escapeHtml(item.name || "")}</td>
-            <td>${escapeHtml(item.condition || "")}</td>
-            <td>${escapeHtml(item.store || "")}</td>
-            <td>
-              <input type="number" min="0"
-                value="${qty}"
-                class="qty-input"
-                data-id="${item.id}">
-              ${qty <= 1 ? '<span class="badge-low">niedrig</span>' : ""}
-            </td>
-            <td>${price.toFixed(2).replace(".", ",")}</td>
-            <td>${total.toFixed(2).replace(".", ",")}</td>
-            <td>${escapeHtml(item.purchaseDate || "")}</td>
-            <td>${item.photoDataUrl ? '<span class="text-muted">Foto</span>' : '<span class="text-muted">–</span>'}</td>
-            <td>
-              <div class="actions-cell">
-                <button class="icon-btn" data-action="flag" data-id="${item.id}" title="Markieren">★</button>
-                <button class="icon-btn" data-action="edit" data-id="${item.id}" title="Bearbeiten">✏️</button>
-                <button class="icon-btn" data-action="photo" data-id="${item.id}" title="Foto anzeigen" ${item.photoDataUrl ? "" : "disabled"}>🖼️</button>
-                <button class="icon-btn danger" data-action="delete" data-id="${item.id}" title="Löschen">🗑️</button>
-              </div>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        }
-
-        updateStats();
-      }
-
-      function updateStats() {
-        const count = items.length;
-        const totalQty = items.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
-        const totalPrice = items.reduce((sum, i) => {
-          const qty = Number(i.quantity || 0);
-          const price = Number(i.price || 0);
-          return sum + qty * price;
-        }, 0);
-
-        statsCount.textContent = count;
-        statsQty.textContent = totalQty;
-        statsTotal.textContent = totalPrice.toFixed(2).replace(".", ",") + " €";
-      }
-
-      // Export / Import
-      function exportJson(list) {
-        const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "lager-backup.json";
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-
-      function importJson(file) {
-        return new Promise((resolve, reject) => {
-          const r = new FileReader();
-          r.onload = () => {
-            try {
-              resolve(JSON.parse(r.result));
-            } catch (e) {
-              reject(e);
-            }
-          };
-          r.onerror = reject;
-          r.readAsText(file);
-        });
-      }
-
-      async function exportPdf(list) {
-        const jspdf = window.jspdf;
-        if (!jspdf || !jspdf.jsPDF) {
-          alert("PDF-Bibliothek nicht geladen.");
-          return;
-        }
-        const { jsPDF } = jspdf;
-        const doc = new jsPDF("p", "mm", "a4");
-
-        const today = new Date().toLocaleDateString("de-DE");
-        let y = 15;
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("Inventur – Lagerbestand", 10, y);
-        y += 6;
-
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text("Erstellt am: " + today, 10, y);
-        y += 8;
-
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        doc.text("Art.-Nr.", 10, y);
-        doc.text("Name", 35, y);
-        doc.text("Menge", 100, y);
-        doc.text("€/Stk", 120, y);
-        doc.text("Gesamt", 140, y);
-        doc.text("Zustand", 165, y);
-        y += 4;
-        doc.setLineWidth(0.2);
-        doc.line(10, y, 200, y);
-        y += 3;
-
-        doc.setFont("helvetica", "normal");
-
-        let total = 0;
-
-        list.forEach((i) => {
-          const nr = (i.articleNumber || "").toString();
-          const name = (i.name || "").toString();
-          const qty = Number(i.quantity || 0);
-          const price = Number(i.price || 0);
-          const sum = qty * price;
-          total += sum;
-
-          if (y > 270) {
-            doc.addPage();
-            y = 15;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.text("Inventur – Lagerbestand (Fortsetzung)", 10, y);
-            y += 6;
-            doc.setFontSize(8);
-            doc.text("Art.-Nr.", 10, y);
-            doc.text("Name", 35, y);
-            doc.text("Menge", 100, y);
-            doc.text("€/Stk", 120, y);
-            doc.text("Gesamt", 140, y);
-            doc.text("Zustand", 165, y);
-            y += 4;
-            doc.line(10, y, 200, y);
-            y += 3;
-            doc.setFont("helvetica", "normal");
-          }
-
-          doc.text(shorten(nr, 12), 10, y);
-          doc.text(shorten(name, 30), 35, y);
-          doc.text(String(qty), 110, y, { align: "right" });
-          doc.text(price.toFixed(2).replace(".", ","), 130, y, { align: "right" });
-          doc.text(sum.toFixed(2).replace(".", ","), 150, y, { align: "right" });
-          doc.text(shorten(i.condition || "", 10), 165, y);
-          y += 4;
-        });
-
-        y += 4;
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text("GESAMT: " + total.toFixed(2).replace(".", ",") + " €", 10, y);
-
-        doc.save("Inventur-Lagerbestand.pdf");
-      }
-
-      // Helper
-      function getValue(id) {
-        return document.getElementById(id).value;
-      }
-
-      function setValue(id, v) {
-        document.getElementById(id).value = v ?? "";
-      }
-
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      }
-
-      function shorten(str, max) {
-        if (!str) return "";
-        return str.length > max ? str.slice(0, max - 1) + "…";
-      }
-
-      // Init
-      render();
-
-      // Service Worker registrieren
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(console.error);
-        });
-      }
-    });
-  </script>
 </body>
 </html>
