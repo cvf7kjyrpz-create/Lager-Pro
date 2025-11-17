@@ -1,4 +1,4 @@
-const CACHE = "lager-v1";
+const CACHE = "lager-app-v3";
 const FILES = [
   "./",
   "./index.html",
